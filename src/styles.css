@@ -534,3 +534,15 @@ body {
 .hero-prompt { border-color: #63e6be; background: rgba(7, 39, 46, 0.76); box-shadow: 0 0 22px rgba(99, 230, 190, 0.28), inset 0 0 22px rgba(99, 230, 190, 0.1); }
 .send-orb { background: linear-gradient(145deg, #63e6be, #ff8b6a); box-shadow: 0 0 18px rgba(99, 230, 190, 0.55); }
 .prompt-spark { color: #63e6be; }
+
+.app-layout { width: min(1260px, 100%); display: flex; align-items: stretch; gap: 16px; }
+.conversation-sidebar { width: 244px; flex: 0 0 244px; padding: 22px 14px; border: 1px solid rgba(99, 230, 190, 0.18); border-radius: 20px; background: rgba(7, 27, 42, 0.82); box-shadow: 0 18px 42px rgba(0, 0, 0, .22); }
+.sidebar-brand { color: #f3fff9; font-size: 1.18rem; font-weight: 800; letter-spacing: .08em; padding: 0 10px 20px; }.sidebar-brand span { color: #63e6be; margin-right: 5px; }
+.new-chat-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid rgba(99, 230, 190, .5); border-radius: 12px; padding: 12px 10px; color: #071b2a; background: #63e6be; font-weight: 800; cursor: pointer; }.new-chat-btn:hover { background: #9af5d5; }
+.sidebar-label { color: #7ca99d; font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; margin: 26px 10px 10px; }
+.conversation-list { display: flex; flex-direction: column; gap: 6px; }.empty-conversations { color: #76918e; font-size: .8rem; line-height: 1.5; padding: 10px; }
+.conversation-item { display: flex; align-items: center; gap: 3px; border-radius: 10px; }.conversation-item.active { background: rgba(99, 230, 190, .13); }.conversation-item > button:first-child { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; border: 0; padding: 11px 9px; overflow: hidden; color: #c7e6dc; text-align: left; background: transparent; cursor: pointer; }.conversation-item > button:first-child span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .82rem; }.conversation-item > button:first-child .material-symbols-rounded { color: #63e6be; font-size: 1.05rem; }.delete-conversation { border: 0; color: #74918f; background: transparent; padding: 8px; cursor: pointer; }.delete-conversation:hover { color: #ff8b6a; }
+.hero-app { flex: 1; min-width: 0; }
+
+@media (max-width: 900px) { .conversation-sidebar { width: 210px; flex-basis: 210px; }.app-layout { gap: 10px; } }
+@media (max-width: 700px) { .app-layout { display: block; }.conversation-sidebar { width: 100%; margin-bottom: 12px; padding: 14px; }.sidebar-brand { display: inline-block; padding-bottom: 12px; }.new-chat-btn { width: auto; float: right; margin-top: -4px; padding: 9px 12px; }.sidebar-label { clear: both; margin-top: 16px; }.conversation-list { max-height: 110px; overflow-y: auto; }.hero-app { min-height: calc(100vh - 12px); } }

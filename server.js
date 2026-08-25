@@ -27,8 +27,10 @@ app.use(express.json());
 
 const readDatabase = () => {
   db.read();
-  db.data ||= { users: [] };
+  db.data ||= { users: [], conversations: [], messages: [] };
   db.data.users ||= [];
+  db.data.conversations ||= [];
+  db.data.messages ||= [];
 };
 
 const writeDatabase = () => db.write();
@@ -142,6 +144,56 @@ app.get('/api/me', requireAuth, (req, res) => {
   return res.json({ user });
 });
 
+app.get('/api/conversations', requireAuth, (req, res) => {
+  readDatabase();
+  const conversations = db.data.conversations
+    .filter((conversation) => conversation.user_id === req.user.id)
+    .sort((first, second) => new Date(second.updated_at) - new Date(first.updated_at));
+
+  return res.json({ conversations });
+});
+
+app.post('/api/conversations', requireAuth, (req, res) => {
+  const title = String(req.body.title || 'New conversation').trim().slice(0, 80) || 'New conversation';
+  readDatabase();
+  const now = new Date().toISOString();
+  const conversation = {
+    id: db.data.conversations.length ? Math.max(...db.data.conversations.map((item) => item.id)) + 1 : 1,
+    user_id: req.user.id,
+    title,
+    created_at: now,
+    updated_at: now,
+  };
+  db.data.conversations.push(conversation);
+  writeDatabase();
+  return res.status(201).json({ conversation, messages: [] });
+});
+
+app.get('/api/conversations/:id', requireAuth, (req, res) => {
+  readDatabase();
+  const conversation = db.data.conversations.find(
+    (item) => item.id === Number(req.params.id) && item.user_id === req.user.id
+  );
+  if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
+
+  const messages = db.data.messages.filter((message) => message.conversation_id === conversation.id);
+  return res.json({ conversation, messages });
+});
+
+app.delete('/api/conversations/:id', requireAuth, (req, res) => {
+  readDatabase();
+  const conversationId = Number(req.params.id);
+  const conversation = db.data.conversations.find(
+    (item) => item.id === conversationId && item.user_id === req.user.id
+  );
+  if (!conversation) return res.status(404).json({ error: 'Conversation not found' });
+
+  db.data.conversations = db.data.conversations.filter((item) => item.id !== conversationId);
+  db.data.messages = db.data.messages.filter((message) => message.conversation_id !== conversationId);
+  writeDatabase();
+  return res.json({ success: true });
+});
+
 const readResponse = async (response) => {
   const text = await response.text();
   try {
@@ -203,11 +255,39 @@ const callGemini = async (prompt, apiKey) => {
 };
 
 app.post('/api/chat', requireAuth, async (req, res) => {
-  const { prompt } = req.body;
+  const { prompt, conversationId } = req.body;
 
   if (!prompt || !prompt.trim()) {
     return res.status(400).json({ error: 'Prompt is required' });
   }
+
+  readDatabase();
+  let conversation = db.data.conversations.find(
+    (item) => item.id === Number(conversationId) && item.user_id === req.user.id
+  );
+
+  if (!conversation) {
+    const now = new Date().toISOString();
+    conversation = {
+      id: db.data.conversations.length ? Math.max(...db.data.conversations.map((item) => item.id)) + 1 : 1,
+      user_id: req.user.id,
+      title: prompt.trim().slice(0, 54),
+      created_at: now,
+      updated_at: now,
+    };
+    db.data.conversations.push(conversation);
+  }
+
+  const userMessage = {
+    id: db.data.messages.length ? Math.max(...db.data.messages.map((item) => item.id)) + 1 : 1,
+    conversation_id: conversation.id,
+    role: 'user',
+    text: prompt.trim(),
+    created_at: new Date().toISOString(),
+  };
+  db.data.messages.push(userMessage);
+  conversation.updated_at = userMessage.created_at;
+  writeDatabase();
 
   const providers = [
     ['groq', providerKeys.groq],
@@ -228,7 +308,21 @@ app.post('/api/chat', requireAuth, async (req, res) => {
         ? await callGemini(prompt.trim(), apiKey)
         : await callCompatibleProvider(provider, prompt.trim(), apiKey);
 
-      if (reply) return res.json({ reply, provider });
+      if (reply) {
+        readDatabase();
+        conversation = db.data.conversations.find((item) => item.id === conversation.id);
+        const assistantMessage = {
+          id: db.data.messages.length ? Math.max(...db.data.messages.map((item) => item.id)) + 1 : 1,
+          conversation_id: conversation.id,
+          role: 'assistant',
+          text: reply,
+          created_at: new Date().toISOString(),
+        };
+        db.data.messages.push(assistantMessage);
+        conversation.updated_at = assistantMessage.created_at;
+        writeDatabase();
+        return res.json({ reply, provider, conversationId: conversation.id });
+      }
       failures.push(`${provider}: empty response`);
     } catch (error) {
       failures.push(`${provider}: ${error.message}`);

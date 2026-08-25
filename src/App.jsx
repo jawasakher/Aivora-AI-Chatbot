@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 const starterSuggestions = [
   'Design a home office setup for productivity and comfort under $500.',
-  'How can I level up my web development expertise in 2025?',
+  'How can I level up my web development expertise in 2026?',
   'Suggest some useful tools for debugging JavaScript code.',
   'Create a React JS component for a simple todo list app.',
 ];
@@ -64,6 +64,8 @@ function App() {
   });
   const [authForm, setAuthForm] = useState({ username: '', password: '' });
   const [authError, setAuthError] = useState('');
+  const [conversations, setConversations] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -101,6 +103,61 @@ function App() {
   }, [auth?.token]);
 
   const suggestionList = useMemo(() => starterSuggestions, []);
+
+  const authHeaders = () => ({
+    Authorization: `Bearer ${auth?.token}`,
+  });
+
+  const loadConversations = async () => {
+    const response = await fetch('/api/conversations', { headers: authHeaders() });
+    const data = await parseJsonSafely(response);
+    if (!response.ok) throw new Error(data.error || 'Could not load conversations');
+    setConversations(data.conversations || []);
+    if (data.conversations?.length && !activeConversationId) {
+      await openConversation(data.conversations[0].id);
+    }
+  };
+
+  const openConversation = async (conversationId) => {
+    const response = await fetch(`/api/conversations/${conversationId}`, { headers: authHeaders() });
+    const data = await parseJsonSafely(response);
+    if (!response.ok) return;
+    setActiveConversationId(conversationId);
+    setMessages(data.messages?.length ? data.messages : initialMessages);
+  };
+
+  const createConversation = async () => {
+    const response = await fetch('/api/conversations', {
+      method: 'POST',
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'New conversation' }),
+    });
+    const data = await parseJsonSafely(response);
+    if (!response.ok) return;
+    setConversations((prev) => [data.conversation, ...prev]);
+    setActiveConversationId(data.conversation.id);
+    setMessages(initialMessages);
+    setError('');
+  };
+
+  const deleteConversation = async (conversationId) => {
+    const response = await fetch(`/api/conversations/${conversationId}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+    if (!response.ok) return;
+    const remaining = conversations.filter((conversation) => conversation.id !== conversationId);
+    setConversations(remaining);
+    if (activeConversationId === conversationId) {
+      setActiveConversationId(null);
+      setMessages(initialMessages);
+    }
+  };
+
+  useEffect(() => {
+    if (!auth?.token) return;
+    loadConversations().catch((loadError) => setError(loadError.message));
+  }, [auth?.token]);
 
   const handleAuthSubmit = async (event) => {
     event.preventDefault();
@@ -170,7 +227,7 @@ function App() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${auth.token}`,
         },
-        body: JSON.stringify({ prompt: trimmed }),
+        body: JSON.stringify({ prompt: trimmed, conversationId: activeConversationId }),
       });
 
       const data = await parseJsonSafely(response);
@@ -186,6 +243,10 @@ function App() {
       };
 
       setMessages((prev) => [...prev, reply]);
+      if (data.conversationId && data.conversationId !== activeConversationId) {
+        setActiveConversationId(data.conversationId);
+      }
+      await loadConversations();
     } catch (err) {
       setError(err.message || 'Something went wrong.');
       setMessages((prev) => [
@@ -280,7 +341,28 @@ function App() {
 
   return (
     <div className="app-shell">
-      <div className="chat-app hero-app">
+      <div className="app-layout">
+        <aside className="conversation-sidebar">
+          <div className="sidebar-brand"><span>✦</span> Aivora</div>
+          <button type="button" className="new-chat-btn" onClick={createConversation}>
+            <span className="material-symbols-rounded">add</span> New conversation
+          </button>
+          <div className="sidebar-label">Your conversations</div>
+          <div className="conversation-list">
+            {conversations.length === 0 && <div className="empty-conversations">Your chats will appear here.</div>}
+            {conversations.map((conversation) => (
+              <div className={`conversation-item ${activeConversationId === conversation.id ? 'active' : ''}`} key={conversation.id}>
+                <button type="button" onClick={() => openConversation(conversation.id)}>
+                  <span className="material-symbols-rounded">chat_bubble</span>
+                  <span>{conversation.title}</span>
+                </button>
+                <button type="button" className="delete-conversation material-symbols-rounded" onClick={() => deleteConversation(conversation.id)} aria-label="Delete conversation">delete</button>
+              </div>
+            ))}
+          </div>
+        </aside>
+
+        <div className="chat-app hero-app">
         <header className="topbar">
           <div className="brand-mark"><span className="brand-spark">✦</span> Aivora <span>INTELLIGENCE STUDIO</span></div>
           <div className="topbar-actions">
@@ -345,6 +427,7 @@ function App() {
           <div className="suggestion-strip">
             {suggestionList.slice(0, 3).map((suggestion) => <button type="button" key={suggestion} onClick={() => handleSuggestionClick(suggestion)}>{suggestion}</button>)}
           </div>
+        </div>
         </div>
       </div>
     </div>

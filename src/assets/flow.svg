@@ -1,0 +1,93 @@
+<svg width="1200" height="650" viewBox="0 0 1200 650"
+xmlns="http://www.w3.org/2000/svg">
+
+<defs>
+  <linearGradient id="box" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#1E293B"/>
+    <stop offset="100%" stop-color="#3730A3"/>
+  </linearGradient>
+
+  <marker id="arrow"
+          markerWidth="10"
+          markerHeight="10"
+          refX="8"
+          refY="3"
+          orient="auto">
+    <path d="M0,0 L0,6 L9,3 z" fill="#60A5FA"/>
+  </marker>
+</defs>
+
+<rect width="1200" height="650" rx="24" fill="#0F172A"/>
+
+<text x="600" y="55"
+      text-anchor="middle"
+      font-family="Arial"
+      font-size="30"
+      font-weight="700"
+      fill="#F8FAFC">
+  Application Flow
+</text>
+
+<g font-family="Arial" text-anchor="middle">
+
+<rect x="430" y="90" width="340" height="70"
+      rx="16" fill="url(#box)" stroke="#60A5FA"/>
+<text x="600" y="134" font-size="21" fill="#F8FAFC">
+  User opens chatbot
+</text>
+
+<rect x="430" y="200" width="340" height="70"
+      rx="16" fill="url(#box)" stroke="#818CF8"/>
+<text x="600" y="244" font-size="21" fill="#F8FAFC">
+  User sends message
+</text>
+
+<rect x="430" y="310" width="340" height="70"
+      rx="16" fill="url(#box)" stroke="#A78BFA"/>
+<text x="600" y="354" font-size="21" fill="#F8FAFC">
+  Request → Gemini API
+</text>
+
+<rect x="160" y="450" width="340" height="80"
+      rx="16" fill="url(#box)" stroke="#38BDF8"/>
+<text x="330" y="485" font-size="19" fill="#F8FAFC">
+  ✓ Successful response
+</text>
+<text x="330" y="512" font-size="15" fill="#CBD5E1">
+  Render AI message
+</text>
+
+<rect x="700" y="450" width="340" height="80"
+      rx="16" fill="url(#box)" stroke="#F472B6"/>
+<text x="870" y="485" font-size="19" fill="#F8FAFC">
+  ⚠ API error
+</text>
+<text x="870" y="512" font-size="15" fill="#CBD5E1">
+  Show friendly error
+</text>
+
+</g>
+
+<path d="M600 160 V195"
+      stroke="#60A5FA"
+      stroke-width="4"
+      marker-end="url(#arrow)"/>
+
+<path d="M600 270 V305"
+      stroke="#818CF8"
+      stroke-width="4"
+      marker-end="url(#arrow)"/>
+
+<path d="M600 380 V415 H330 V440"
+      fill="none"
+      stroke="#38BDF8"
+      stroke-width="4"
+      marker-end="url(#arrow)"/>
+
+<path d="M600 380 V415 H870 V440"
+      fill="none"
+      stroke="#F472B6"
+      stroke-width="4"
+      marker-end="url(#arrow)"/>
+
+</svg>
