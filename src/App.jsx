@@ -46,6 +46,56 @@ const parseJsonSafely = async (response) => {
   }
 };
 
+const renderInlineMarkdown = (text) => {
+  const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\([^\)]+\))/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return <code key={index}>{part.slice(1, -1)}</code>;
+    }
+
+    const boldMatch = part.match(/^\*\*(.+)\*\*$/);
+    if (boldMatch) {
+      return <strong key={index}>{boldMatch[1]}</strong>;
+    }
+
+    const linkMatch = part.match(/^\[([^\]]+)\]\(([^\)]+)\)$/);
+    if (linkMatch) {
+      return <a key={index} href={linkMatch[2]} target="_blank" rel="noreferrer">{linkMatch[1]}</a>;
+    }
+
+    return part;
+  });
+};
+
+const MarkdownMessage = ({ text }) => {
+  const blocks = text.split(/(```[\s\S]*?```)/g);
+
+  return blocks.map((block, blockIndex) => {
+    if (block.startsWith('```')) {
+      const code = block.replace(/^```[^\n]*\n?/, '').replace(/```$/, '');
+      return <pre key={blockIndex}><code>{code}</code></pre>;
+    }
+
+    return block.split('\n').map((line, lineIndex) => {
+      const trimmedLine = line.trim();
+      if (!trimmedLine) return <br key={`${blockIndex}-${lineIndex}`} />;
+
+      const headingMatch = trimmedLine.match(/^#{1,3}\s+(.+)$/);
+      if (headingMatch) {
+        return <strong className="markdown-heading" key={`${blockIndex}-${lineIndex}`}>{renderInlineMarkdown(headingMatch[1])}</strong>;
+      }
+
+      const listMatch = trimmedLine.match(/^[-*]\s+(.+)$/);
+      if (listMatch) {
+        return <span className="markdown-list-item" key={`${blockIndex}-${lineIndex}`}>• {renderInlineMarkdown(listMatch[1])}</span>;
+      }
+
+      return <span className="markdown-line" key={`${blockIndex}-${lineIndex}`}>{renderInlineMarkdown(line)}</span>;
+    });
+  });
+};
+
 function App() {
   const [theme, setTheme] = useState('dark');
   const [input, setInput] = useState('');
@@ -66,6 +116,7 @@ function App() {
   const [authError, setAuthError] = useState('');
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
+  const [copiedMessageId, setCopiedMessageId] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -278,6 +329,12 @@ function App() {
     }
   };
 
+  const handleCopy = async (message) => {
+    await navigator.clipboard.writeText(message.text);
+    setCopiedMessageId(message.id);
+    window.setTimeout(() => setCopiedMessageId(null), 1600);
+  };
+
   if (!auth) {
     return (
       <div className="auth-shell">
@@ -405,7 +462,15 @@ function App() {
             <div className="messages">
               {messages.length > 1 && messages.map((message) => (
                 <div key={message.id} className={`message-row ${message.role}`}>
-                  <div className="message-bubble">{message.text}</div>
+                  <div className="message-bubble">
+                    <MarkdownMessage text={message.text} />
+                    {message.role === 'assistant' && (
+                      <button type="button" className="copy-message" onClick={() => handleCopy(message)} aria-label="Copy response">
+                        <span className="material-symbols-rounded">{copiedMessageId === message.id ? 'check' : 'content_copy'}</span>
+                        {copiedMessageId === message.id ? 'Copied' : 'Copy'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
               {isLoading && <div className="message-row assistant"><div className="message-bubble loading">Thinking...</div></div>}
