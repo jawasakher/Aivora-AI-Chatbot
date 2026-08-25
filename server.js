@@ -17,7 +17,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 /* =========================
-   ENV / API KEYS
+   CONFIGURATION
 ========================= */
 
 const configuredKey = (value) => {
@@ -30,7 +30,8 @@ const configuredKey = (value) => {
     normalized.startsWith('your_') ||
     normalized.includes('change_this') ||
     normalized.includes('ضع_') ||
-    normalized.includes('مفتاح_')
+    normalized.includes('مفتاح_') ||
+    normalized.includes('_الجديد')
   ) {
     return undefined;
   }
@@ -48,10 +49,6 @@ const providerKeys = {
 const JWT_SECRET =
   process.env.JWT_SECRET || 'change_this_secret';
 
-/* =========================
-   DATABASE
-========================= */
-
 const db = new LowSync(
   new JSONFileSync(
     path.join(__dirname, 'database.json')
@@ -63,8 +60,16 @@ const db = new LowSync(
   }
 );
 
+/* =========================
+   MIDDLEWARE
+========================= */
+
 app.use(cors());
 app.use(express.json());
+
+/* =========================
+   DATABASE
+========================= */
 
 const readDatabase = () => {
   db.read();
@@ -84,14 +89,12 @@ const writeDatabase = () => {
   db.write();
 };
 
-readDatabase();
-
 /* =========================
    AUTH
 ========================= */
 
-const generateToken = (user) => {
-  return jwt.sign(
+const generateToken = (user) =>
+  jwt.sign(
     {
       id: user.id,
       username: user.username,
@@ -101,10 +104,10 @@ const generateToken = (user) => {
       expiresIn: '7d',
     }
   );
-};
 
 const requireAuth = (req, res, next) => {
-  const authHeader = req.headers.authorization || '';
+  const authHeader =
+    req.headers.authorization || '';
 
   const token = authHeader.startsWith('Bearer ')
     ? authHeader.slice(7)
@@ -124,13 +127,15 @@ const requireAuth = (req, res, next) => {
 
     req.user = decoded;
 
-    next();
-  } catch {
+    return next();
+  } catch (error) {
     return res.status(401).json({
       error: 'Invalid or expired token',
     });
   }
 };
+
+readDatabase();
 
 /* =========================
    HEALTH
@@ -140,12 +145,15 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     message: 'AI backend is running',
-    providers: {
-      openrouter: Boolean(providerKeys.openrouter),
-      groq: Boolean(providerKeys.groq),
-      cerebras: Boolean(providerKeys.cerebras),
-      gemini: Boolean(providerKeys.gemini),
-    },
+
+    providers: Object.fromEntries(
+      Object.entries(providerKeys).map(
+        ([name, key]) => [
+          name,
+          Boolean(key),
+        ]
+      )
+    ),
   });
 });
 
@@ -154,25 +162,32 @@ app.get('/api/health', (req, res) => {
 ========================= */
 
 app.post('/api/register', (req, res) => {
-  const { username, password } = req.body;
+  const {
+    username,
+    password,
+  } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({
-      error: 'Username and password are required',
+      error:
+        'Username and password are required',
     });
   }
 
-  const trimmedUsername = username.trim();
+  const trimmedUsername =
+    username.trim();
 
   if (trimmedUsername.length < 3) {
     return res.status(400).json({
-      error: 'Username must be at least 3 characters',
+      error:
+        'Username must be at least 3 characters',
     });
   }
 
   if (password.length < 6) {
     return res.status(400).json({
-      error: 'Password must be at least 6 characters',
+      error:
+        'Password must be at least 6 characters',
     });
   }
 
@@ -181,10 +196,12 @@ app.post('/api/register', (req, res) => {
   const normalizedUsername =
     trimmedUsername.toLowerCase();
 
-  const existing = db.data.users.find(
-    (user) =>
-      user.username === normalizedUsername
-  );
+  const existing =
+    db.data.users.find(
+      (user) =>
+        user.username ===
+        normalizedUsername
+    );
 
   if (existing) {
     return res.status(409).json({
@@ -206,21 +223,21 @@ app.post('/api/register', (req, res) => {
 
     username: normalizedUsername,
     password: hashedPassword,
-    created_at: new Date().toISOString(),
+    created_at:
+      new Date().toISOString(),
   };
 
   db.data.users.push(createdUser);
 
   writeDatabase();
 
-  const token = generateToken(createdUser);
+  const token =
+    generateToken(createdUser);
 
   return res.status(201).json({
     token,
-    user: {
-      id: createdUser.id,
-      username: createdUser.username,
-    },
+
+    user: createdUser,
   });
 });
 
@@ -229,43 +246,55 @@ app.post('/api/register', (req, res) => {
 ========================= */
 
 app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
+  const {
+    username,
+    password,
+  } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({
-      error: 'Username and password are required',
+      error:
+        'Username and password are required',
     });
   }
 
   readDatabase();
 
-  const user = db.data.users.find(
-    (item) =>
-      item.username ===
-      username.trim().toLowerCase()
-  );
+  const user =
+    db.data.users.find(
+      (item) =>
+        item.username ===
+        username
+          .trim()
+          .toLowerCase()
+    );
 
   if (!user) {
     return res.status(401).json({
-      error: 'Invalid username or password',
+      error:
+        'Invalid username or password',
     });
   }
 
-  const matches = bcrypt.compareSync(
-    password,
-    user.password
-  );
+  const matches =
+    bcrypt.compareSync(
+      password,
+      user.password
+    );
 
   if (!matches) {
     return res.status(401).json({
-      error: 'Invalid username or password',
+      error:
+        'Invalid username or password',
     });
   }
 
-  const token = generateToken(user);
+  const token =
+    generateToken(user);
 
   return res.json({
     token,
+
     user: {
       id: user.id,
       username: user.username,
@@ -277,26 +306,30 @@ app.post('/api/login', (req, res) => {
    CURRENT USER
 ========================= */
 
-app.get('/api/me', requireAuth, (req, res) => {
-  readDatabase();
+app.get(
+  '/api/me',
+  requireAuth,
+  (req, res) => {
+    readDatabase();
 
-  const user = db.data.users.find(
-    (item) => item.id === req.user.id
-  );
+    const user =
+      db.data.users.find(
+        (item) =>
+          item.id ===
+          req.user.id
+      );
 
-  if (!user) {
-    return res.status(404).json({
-      error: 'User not found',
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found',
+      });
+    }
+
+    return res.json({
+      user,
     });
   }
-
-  return res.json({
-    user: {
-      id: user.id,
-      username: user.username,
-    },
-  });
-});
+);
 
 /* =========================
    CONVERSATIONS
@@ -316,9 +349,13 @@ app.get(
             req.user.id
         )
         .sort(
-          (a, b) =>
-            new Date(b.updated_at) -
-            new Date(a.updated_at)
+          (first, second) =>
+            new Date(
+              second.updated_at
+            ) -
+            new Date(
+              first.updated_at
+            )
         );
 
     return res.json({
@@ -383,13 +420,17 @@ app.get(
       db.data.conversations.find(
         (item) =>
           item.id ===
-            Number(req.params.id) &&
-          item.user_id === req.user.id
+            Number(
+              req.params.id
+            ) &&
+          item.user_id ===
+            req.user.id
       );
 
     if (!conversation) {
       return res.status(404).json({
-        error: 'Conversation not found',
+        error:
+          'Conversation not found',
       });
     }
 
@@ -419,20 +460,24 @@ app.delete(
     const conversation =
       db.data.conversations.find(
         (item) =>
-          item.id === conversationId &&
-          item.user_id === req.user.id
+          item.id ===
+            conversationId &&
+          item.user_id ===
+            req.user.id
       );
 
     if (!conversation) {
       return res.status(404).json({
-        error: 'Conversation not found',
+        error:
+          'Conversation not found',
       });
     }
 
     db.data.conversations =
       db.data.conversations.filter(
         (item) =>
-          item.id !== conversationId
+          item.id !==
+          conversationId
       );
 
     db.data.messages =
@@ -454,165 +499,206 @@ app.delete(
    RESPONSE PARSER
 ========================= */
 
-const readResponse = async (response) => {
-  const text = await response.text();
+const readResponse =
+  async (response) => {
+    const text =
+      await response.text();
 
-  try {
-    return text
-      ? JSON.parse(text)
-      : {};
-  } catch {
-    return {};
-  }
-};
+    try {
+      return text
+        ? JSON.parse(text)
+        : {};
+    } catch (error) {
+      return {};
+    }
+  };
 
 /* =========================
-   OPENAI COMPATIBLE PROVIDERS
+   OPENAI-COMPATIBLE PROVIDERS
 ========================= */
 
-const callCompatibleProvider = async (
-  provider,
-  prompt,
-  apiKey
-) => {
-  const configs = {
-    openrouter: {
-      url:
-        'https://openrouter.ai/api/v1/chat/completions',
+const callCompatibleProvider =
+  async (
+    provider,
+    prompt,
+    apiKey
+  ) => {
+    const config = {
+      /* =====================
+         OPENROUTER
+      ===================== */
 
-      model:
-        process.env.OPENROUTER_MODEL ||
-        'openrouter/free',
-    },
+      openrouter: {
+        url:
+          'https://openrouter.ai/api/v1/chat/completions',
 
-    groq: {
-      url:
-        'https://api.groq.com/openai/v1/chat/completions',
+        model:
+          process.env.OPENROUTER_MODEL ||
+          'openrouter/free',
+      },
 
-      model:
-        process.env.GROQ_MODEL ||
-        'openai/gpt-oss-120b',
-    },
+      /* =====================
+         GROQ
+      ===================== */
 
-    cerebras: {
-      url:
-        'https://api.cerebras.ai/v1/chat/completions',
+      groq: {
+        url:
+          'https://api.groq.com/openai/v1/chat/completions',
 
-      model:
-        process.env.CEREBRAS_MODEL ||
-        'gpt-oss-120b',
-    },
-  };
+        model:
+          process.env.GROQ_MODEL ||
+          'openai/gpt-oss-120b',
+      },
 
-  const config = configs[provider];
+      /* =====================
+         CEREBRAS
+      ===================== */
 
-  if (!config) {
-    throw new Error(
-      `Unsupported provider: ${provider}`
-    );
-  }
+      cerebras: {
+        url:
+          'https://api.cerebras.ai/v1/chat/completions',
 
-  const headers = {
-    Authorization: `Bearer ${apiKey}`,
-    'Content-Type': 'application/json',
-  };
+        model:
+          process.env.CEREBRAS_MODEL ||
+          'gpt-oss-120b',
+      },
+    }[provider];
 
-  if (provider === 'openrouter') {
-    headers['HTTP-Referer'] =
-      'http://localhost:5173';
-
-    headers['X-Title'] =
-      'Aivora AI Chatbot';
-  }
-
-  const response = await fetch(
-    config.url,
-    {
-      method: 'POST',
-      headers,
-
-      body: JSON.stringify({
-        model: config.model,
-
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-
-        temperature: 0.7,
-      }),
+    if (!config) {
+      throw new Error(
+        `Unsupported provider: ${provider}`
+      );
     }
-  );
 
-  const data =
-    await readResponse(response);
+    const headers = {
+      Authorization:
+        `Bearer ${apiKey}`,
 
-  if (!response.ok) {
-    throw new Error(
-      data?.error?.message ||
-        `${provider} request failed (${response.status})`
+      'Content-Type':
+        'application/json',
+    };
+
+    /* =====================
+       OPENROUTER HEADERS
+    ===================== */
+
+    if (
+      provider ===
+      'openrouter'
+    ) {
+      headers['HTTP-Referer'] =
+        'http://localhost:5173';
+
+      headers['X-Title'] =
+        'Aivora AI Chatbot';
+    }
+
+    console.log(
+      `Requesting ${provider} using model: ${config.model}`
     );
-  }
 
-  return (
-    data?.choices?.[0]?.message
-      ?.content || ''
-  );
-};
+    const response =
+      await fetch(
+        config.url,
+        {
+          method: 'POST',
+
+          headers,
+
+          body: JSON.stringify({
+            model:
+              config.model,
+
+            messages: [
+              {
+                role: 'user',
+                content:
+                  prompt,
+              },
+            ],
+
+            temperature: 0.7,
+          }),
+        }
+      );
+
+    const data =
+      await readResponse(
+        response
+      );
+
+    if (!response.ok) {
+      throw new Error(
+        data?.error?.message ||
+          `${provider} request failed (${response.status})`
+      );
+    }
+
+    const reply =
+      data?.choices?.[0]
+        ?.message
+        ?.content || '';
+
+    return reply;
+  };
 
 /* =========================
    GEMINI
 ========================= */
 
-const callGemini = async (
-  prompt,
-  apiKey
-) => {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
+const callGemini =
+  async (
+    prompt,
+    apiKey
+  ) => {
+    const response =
+      await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
 
-      headers: {
-        'Content-Type':
-          'application/json',
-      },
+          headers: {
+            'Content-Type':
+              'application/json',
+          },
 
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-
-            parts: [
+          body: JSON.stringify({
+            contents: [
               {
-                text: prompt,
+                role: 'user',
+
+                parts: [
+                  {
+                    text: prompt,
+                  },
+                ],
               },
             ],
-          },
-        ],
-      }),
+          }),
+        }
+      );
+
+    const data =
+      await readResponse(
+        response
+      );
+
+    if (!response.ok) {
+      throw new Error(
+        data?.error?.message ||
+          `Gemini request failed (${response.status})`
+      );
     }
-  );
 
-  const data =
-    await readResponse(response);
-
-  if (!response.ok) {
-    throw new Error(
-      data?.error?.message ||
-        `Gemini request failed (${response.status})`
+    return (
+      data?.candidates?.[0]
+        ?.content?.parts
+        ?.map(
+          (part) => part.text
+        )
+        .join('') || ''
     );
-  }
-
-  return (
-    data?.candidates?.[0]?.content
-      ?.parts
-      ?.map((part) => part.text)
-      .join('') || ''
-  );
-};
+  };
 
 /* =========================
    CHAT
@@ -632,7 +718,8 @@ app.post(
       !prompt.trim()
     ) {
       return res.status(400).json({
-        error: 'Prompt is required',
+        error:
+          'Prompt is required',
       });
     }
 
@@ -642,31 +729,49 @@ app.post(
       db.data.conversations.find(
         (item) =>
           item.id ===
-            Number(conversationId) &&
-          item.user_id === req.user.id
+            Number(
+              conversationId
+            ) &&
+          item.user_id ===
+            req.user.id
       );
+
+    /* =====================
+       CREATE CONVERSATION
+    ===================== */
 
     if (!conversation) {
       const now =
         new Date().toISOString();
 
       conversation = {
-        id: db.data.conversations.length
-          ? Math.max(
-              ...db.data.conversations.map(
-                (item) => item.id
-              )
-            ) + 1
-          : 1,
+        id:
+          db.data.conversations
+            .length
+            ? Math.max(
+                ...db.data.conversations.map(
+                  (item) =>
+                    item.id
+                )
+              ) + 1
+            : 1,
 
-        user_id: req.user.id,
+        user_id:
+          req.user.id,
 
-        title: prompt
-          .trim()
-          .slice(0, 54),
+        title:
+          prompt
+            .trim()
+            .slice(
+              0,
+              54
+            ),
 
-        created_at: now,
-        updated_at: now,
+        created_at:
+          now,
+
+        updated_at:
+          now,
       };
 
       db.data.conversations.push(
@@ -674,21 +779,29 @@ app.post(
       );
     }
 
+    /* =====================
+       SAVE USER MESSAGE
+    ===================== */
+
     const userMessage = {
-      id: db.data.messages.length
-        ? Math.max(
-            ...db.data.messages.map(
-              (item) => item.id
-            )
-          ) + 1
-        : 1,
+      id:
+        db.data.messages
+          .length
+          ? Math.max(
+              ...db.data.messages.map(
+                (item) =>
+                  item.id
+              )
+            ) + 1
+          : 1,
 
       conversation_id:
         conversation.id,
 
       role: 'user',
 
-      text: prompt.trim(),
+      text:
+        prompt.trim(),
 
       created_at:
         new Date().toISOString(),
@@ -703,10 +816,14 @@ app.post(
 
     writeDatabase();
 
-    /* =========================
+    /* =====================
        PROVIDER PRIORITY
-       OpenRouter → Groq → Cerebras → Gemini
-    ========================= */
+       
+       1. OpenRouter
+       2. Groq
+       3. Cerebras
+       4. Gemini
+    ===================== */
 
     const providers = [
       [
@@ -729,21 +846,34 @@ app.post(
         providerKeys.gemini,
       ],
     ].filter(
-      ([, key]) => Boolean(key)
+      ([, key]) => key
     );
 
     if (!providers.length) {
       return res.status(500).json({
         error:
-          'No AI provider is configured. Check your .env file.',
+          'No AI provider is configured. Add a valid OPENROUTER_API_KEY, GROQ_API_KEY, CEREBRAS_API_KEY, or GEMINI_API_KEY to .env, then restart the backend.',
       });
     }
 
+    console.log(
+      'Available AI providers:',
+      providers.map(
+        ([name]) => name
+      )
+    );
+
     const failures = [];
 
+    /* =====================
+       TRY PROVIDERS
+    ===================== */
+
     for (
-      const [provider, apiKey]
-      of providers
+      const [
+        provider,
+        apiKey,
+      ] of providers
     ) {
       try {
         console.log(
@@ -751,7 +881,8 @@ app.post(
         );
 
         const reply =
-          provider === 'gemini'
+          provider ===
+          'gemini'
             ? await callGemini(
                 prompt.trim(),
                 apiKey
@@ -762,109 +893,113 @@ app.post(
                 apiKey
               );
 
-        if (!reply) {
-          failures.push(
-            `${provider}: empty response`
+        /* =================
+           SUCCESS
+        ================= */
+
+        if (reply) {
+          readDatabase();
+
+          conversation =
+            db.data.conversations.find(
+              (item) =>
+                item.id ===
+                conversation.id
+            );
+
+          const assistantMessage = {
+            id:
+              db.data.messages
+                .length
+                ? Math.max(
+                    ...db.data.messages.map(
+                      (item) =>
+                        item.id
+                    )
+                  ) + 1
+                : 1,
+
+            conversation_id:
+              conversation.id,
+
+            role:
+              'assistant',
+
+            text:
+              reply,
+
+            created_at:
+              new Date().toISOString(),
+          };
+
+          db.data.messages.push(
+            assistantMessage
           );
 
-          continue;
-        }
+          conversation.updated_at =
+            assistantMessage.created_at;
 
-        /* SAVE ASSISTANT MESSAGE */
+          writeDatabase();
 
-        readDatabase();
+          /* =================
+             STREAM RESPONSE
+          ================= */
 
-        conversation =
-          db.data.conversations.find(
-            (item) =>
-              item.id ===
-              conversation.id
+          res.status(200);
+
+          res.setHeader(
+            'Content-Type',
+            'application/x-ndjson; charset=utf-8'
           );
 
-        const assistantMessage = {
-          id: db.data.messages.length
-            ? Math.max(
-                ...db.data.messages.map(
-                  (item) => item.id
-                )
-              ) + 1
-            : 1,
+          res.setHeader(
+            'Cache-Control',
+            'no-cache'
+          );
 
-          conversation_id:
-            conversation.id,
+          res.setHeader(
+            'Connection',
+            'keep-alive'
+          );
 
-          role: 'assistant',
+          const chunkSize =
+            32;
 
-          text: reply,
+          for (
+            let index = 0;
+            index <
+            reply.length;
+            index +=
+              chunkSize
+          ) {
+            res.write(
+              `${JSON.stringify({
+                type: 'chunk',
+                text:
+                  reply.slice(
+                    index,
+                    index +
+                      chunkSize
+                  ),
+              })}\n`
+            );
+          }
 
-          created_at:
-            new Date().toISOString(),
-        };
-
-        db.data.messages.push(
-          assistantMessage
-        );
-
-        conversation.updated_at =
-          assistantMessage.created_at;
-
-        writeDatabase();
-
-        /* =========================
-           STREAM RESPONSE
-        ========================= */
-
-        res.status(200);
-
-        res.setHeader(
-          'Content-Type',
-          'application/x-ndjson; charset=utf-8'
-        );
-
-        res.setHeader(
-          'Cache-Control',
-          'no-cache'
-        );
-
-        res.setHeader(
-          'Connection',
-          'keep-alive'
-        );
-
-        const chunkSize = 32;
-
-        for (
-          let index = 0;
-          index < reply.length;
-          index += chunkSize
-        ) {
           res.write(
             `${JSON.stringify({
-              type: 'chunk',
-              text: reply.slice(
-                index,
-                index + chunkSize
-              ),
+              type: 'done',
+              provider,
+              conversationId:
+                conversation.id,
             })}\n`
           );
 
-          await new Promise(
-            (resolve) =>
-              setTimeout(resolve, 18)
-          );
+          return res.end();
         }
 
-        res.write(
-          `${JSON.stringify({
-            type: 'done',
-            provider,
-            conversationId:
-              conversation.id,
-          })}\n`
+        failures.push(
+          `${provider}: empty response`
         );
-
-        return res.end();
-
       } catch (error) {
         failures.push(
           `${provider}: ${error.message}`
@@ -877,9 +1012,13 @@ app.post(
       }
     }
 
+    /* =====================
+       ALL PROVIDERS FAILED
+    ===================== */
+
     return res.status(502).json({
       error:
-        `All configured AI providers failed. ${failures.join(
+        `All configured AI providers failed. Check your API keys, model names, and network access. ${failures.join(
           ' | '
         )}`,
     });
@@ -899,9 +1038,15 @@ app.listen(
 
     console.log(
       'Configured AI providers:',
-      Object.entries(providerKeys)
-        .filter(([, key]) => key)
-        .map(([name]) => name)
+      Object.entries(
+        providerKeys
+      )
+        .filter(
+          ([, key]) => key
+        )
+        .map(
+          ([name]) => name
+        )
         .join(', ') ||
         'none'
     );
