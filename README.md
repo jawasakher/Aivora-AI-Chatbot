@@ -189,8 +189,6 @@ Aivora follows a full-stack architecture:
 
 ## 🔄 Application Flow
 
-<img src="./assets/flow.svg" alt="Aivora Application Flow" width="100%"/>
-
 ```text
 User
  │
@@ -492,26 +490,6 @@ database.json
 ```
 
 This setup keeps the project simple during development while leaving room for a future migration to a production database such as PostgreSQL or MongoDB.
-
----
-
-## 📸 Screenshots
-
-### 🏠 Aivora Interface
-
-<img src="./assets/aivora-home.jpg" alt="Aivora AI Chatbot interface" width="100%"/>
-
-### 💬 Conversation Workspace
-
-<img src="./assets/aivora-chat.jpg" alt="Aivora conversation interface" width="100%"/>
-
-### 🗂️ Chat History
-
-<img src="./assets/aivora-sidebar.jpg" alt="Aivora conversation sidebar" width="100%"/>
-
-> Replace the filenames above with the actual screenshots you want to showcase.
-
----
 
 ## 🚨 Error Handling
 
