@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="./assets/banner.svg" alt="Aivora AI Chatbot" width="100%"/>
+<img src="Aivora AI Chatbot.jpg" alt="Aivora AI Chatbot" width="100%"/>
 
 ### Your intelligent conversational workspace.
 
