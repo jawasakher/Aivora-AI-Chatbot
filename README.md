@@ -1,181 +1,317 @@
-# 🤖 Gemini AI Chatbot
+# ✨ Aivora AI Chatbot
 
 <div align="center">
 
-<img src="./assets/banner.svg" alt="Gemini AI Chatbot Banner" width="100%"/>
+<img src="Aivora AI Chatbot.jpg" alt="Aivora AI Chatbot" width="100%"/>
 
-### 🚀 Modern AI Chatbot powered by Google Gemini
+### Your intelligent conversational workspace.
 
-A modern, responsive and interactive AI chatbot built with **React + Vite**, designed to provide a clean conversational experience with Google Gemini API.
+A modern full-stack AI chatbot built with **React, Vite, Express and multiple AI providers**, featuring authentication, persistent conversations, chat history and a responsive user experience.
 
-<p>
-  <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React"/>
-  <img src="https://img.shields.io/badge/Vite-Frontend-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite"/>
-  <img src="https://img.shields.io/badge/Gemini-AI-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini"/>
-  <img src="https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript"/>
-</p>
+<br/>
 
-<p>
-  <a href="#-features">Features</a> •
-  <a href="#-installation">Installation</a> •
-  <a href="#-screenshots">Screenshots</a> •
-  <a href="#-project-structure">Structure</a>
-</p>
+<img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=white"/>
+<img src="https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white"/>
+<img src="https://img.shields.io/badge/Node.js-Backend-339933?style=for-the-badge&logo=node.js&logoColor=white"/>
+<img src="https://img.shields.io/badge/Express.js-API-000000?style=for-the-badge&logo=express&logoColor=white"/>
+
+<br/>
+
+<img src="https://img.shields.io/badge/Google-Gemini-4285F4?style=for-the-badge&logo=google&logoColor=white"/>
+<img src="https://img.shields.io/badge/Groq-AI-F55036?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/Cerebras-AI-6C63FF?style=for-the-badge"/>
+<img src="https://img.shields.io/badge/LowDB-Database-FFB000?style=for-the-badge"/>
+
+<br/><br/>
+
+**React · Vite · Express · JWT · LowDB · Gemini · Groq · Cerebras**
 
 </div>
 
 ---
 
-## ✨ Overview
+## 🚀 Overview
 
-**Gemini AI Chatbot** is a modern AI-powered conversational interface that connects users with Google's Gemini models.
+**Aivora** is a full-stack AI conversational application designed to provide a clean, fast and extensible chat experience.
 
-The project focuses on combining:
+Instead of being just a simple API demo, Aivora combines a modern frontend with a dedicated backend layer for:
 
-* 🎨 Clean modern UI
-* ⚡ Fast React architecture
-* 🤖 AI-powered conversations
-* 📱 Responsive design
-* 🔐 Environment-based API configuration
-* 🛡️ Graceful API error handling
-* 🌍 Clear handling of regional/API availability issues
+* 🔐 User authentication
+* 💬 Persistent conversations
+* 🗂️ Conversation history
+* 👤 User-specific data
+* 🤖 Multiple AI providers
+* 🛡️ Protected API routes
+* ⚡ Fast React/Vite frontend
+* 📱 Responsive interface
+* 🚨 Friendly API error handling
 
-The goal is to create an AI chatbot that feels simple, fast and professional while remaining easy to extend.
+The architecture is designed so the application can evolve from a portfolio project into a larger AI SaaS product.
 
 ---
 
-## 🎯 Why This Project?
+## ✨ Features
 
-AI applications are becoming an essential part of modern web development.
+### 🤖 Multi-Provider AI
 
-This project demonstrates how to build a complete frontend AI experience while working with:
+Aivora is designed around a provider-based AI architecture.
+
+Currently supported providers include:
+
+* Google Gemini
+* Groq
+* Cerebras
+
+This makes it possible to expand or switch AI providers without redesigning the entire application.
+
+---
+
+### 🔐 Authentication
+
+Aivora includes a backend authentication system with:
+
+* User registration
+* User login
+* Password hashing with `bcryptjs`
+* JWT authentication
+* Protected API routes
+* Token expiration
+
+Passwords are never stored as plain text.
+
+---
+
+### 💬 Persistent Conversations
+
+Conversations are stored on the backend and associated with the authenticated user.
+
+Users can:
+
+* Create a new conversation
+* Open previous conversations
+* Continue existing chats
+* Delete conversations
+* Keep separate conversation histories
+
+This transforms Aivora from a temporary chatbot into a persistent conversational application.
+
+---
+
+### 🗂️ Chat Sidebar
+
+The sidebar provides a dedicated workspace for conversation history.
 
 ```text
-React
-   ↓
-User Interface
-   ↓
-Conversation State
-   ↓
-Gemini API
-   ↓
-AI Response
-   ↓
-Rendered Chat Message
+┌───────────────────────────┐
+│          AIVORA           │
+│                           │
+│  + New conversation       │
+│                           │
+│  Today                    │
+│  ├─ React architecture    │
+│  ├─ Build a portfolio     │
+│  └─ Learn Node.js         │
+│                           │
+│  Previous                 │
+│  ├─ AI project            │
+│  └─ JavaScript help       │
+└───────────────────────────┘
 ```
 
-It also demonstrates practical handling of situations where the AI provider may be unavailable because of **API restrictions, regional availability or configuration problems**.
-
 ---
 
-## 🚀 Features
+### 🎨 Modern User Interface
 
-### 💬 AI Conversation
+The frontend focuses on:
 
-* Real-time conversational interface
-* Send messages to Gemini
-* Display AI responses
-* Conversation history
+* Clean visual hierarchy
+* Responsive layouts
+* Interactive chat experience
 * Loading states
 * Error states
-
-### 🎨 Modern UI
-
-* Clean interface
-* Responsive layout
-* Modern typography
-* Interactive elements
-* Smooth user experience
-* Mobile-friendly design
-
-### ⚡ Performance
-
-* Powered by Vite
-* Component-based React architecture
-* Lightweight frontend
-* Fast development environment
-
-### 🛡️ Error Handling
-
-The application is designed to avoid leaving the user with an unclear connection error.
-
-Instead, API failures can be presented with a meaningful message such as:
-
-> Gemini API is currently unavailable in your region or the API configuration is invalid.
-
-This makes the application easier to understand and debug.
-
-### 🔐 Environment Variables
-
-Sensitive API configuration is kept outside the source code using environment variables.
+* Conversation navigation
+* User-friendly interactions
 
 ---
 
-## 🧠 Application Architecture
+### 🛡️ Protected Backend
 
-<img src="./assets/architecture.svg" alt="Application Architecture" width="100%"/>
+The backend uses JWT-based authentication to protect user-specific resources.
 
-The application follows a simple architecture:
+Requests can be authenticated using:
+
+```http
+Authorization: Bearer <token>
+```
+
+This ensures conversations are accessed through an authenticated user context.
+
+---
+
+## 🧠 Architecture
+
+<img src="./assets/architecture.svg" alt="Aivora Architecture" width="100%"/>
+
+Aivora follows a full-stack architecture:
 
 ```text
-┌─────────────────────┐
-│       User          │
-└──────────┬──────────┘
+┌──────────────────────┐
+│        User          │
+└──────────┬───────────┘
            │
            ▼
-┌─────────────────────┐
-│    React UI         │
-│                     │
-│ Chat / Input / UI   │
-└──────────┬──────────┘
+┌──────────────────────┐
+│     React + Vite     │
+│      Frontend        │
+└──────────┬───────────┘
            │
+           │ HTTP / REST
            ▼
-┌─────────────────────┐
-│  Application Logic  │
-│                     │
-│ State / Requests    │
-└──────────┬──────────┘
+┌──────────────────────┐
+│     Express API      │
+│      Backend         │
+└──────────┬───────────┘
            │
-           ▼
-┌─────────────────────┐
-│    Gemini API       │
-│                     │
-│   Google Gemini     │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│    AI Response      │
-└─────────────────────┘
+      ┌────┴─────┐
+      │          │
+      ▼          ▼
+┌──────────┐ ┌──────────────┐
+│  LowDB   │ │ AI Providers │
+│ Database │ │              │
+└──────────┘ └──────┬───────┘
+                    │
+             ┌──────┼──────┐
+             ▼      ▼      ▼
+          Gemini   Groq  Cerebras
+```
+
+---
+
+## 🔄 Application Flow
+
+```text
+User
+ │
+ ▼
+Login / Register
+ │
+ ▼
+Authenticated Session
+ │
+ ▼
+Conversation Sidebar
+ │
+ ├──────────────► Create Chat
+ │
+ ├──────────────► Open Chat
+ │
+ └──────────────► Delete Chat
+ │
+ ▼
+Send Message
+ │
+ ▼
+Express Backend
+ │
+ ▼
+Selected AI Provider
+ │
+ ▼
+AI Response
+ │
+ ▼
+Save Message
+ │
+ ▼
+Update React UI
 ```
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Technology    | Purpose                     |
-| ------------- | --------------------------- |
-| ⚛️ React      | User interface              |
-| ⚡ Vite        | Development & build tooling |
-| 🟨 JavaScript | Application logic           |
-| 🤖 Gemini API | Artificial intelligence     |
-| 🎨 CSS        | Styling                     |
-| 🔧 Git        | Version control             |
-| 🐙 GitHub     | Source code hosting         |
+| Technology       | Role                      |
+| ---------------- | ------------------------- |
+| ⚛️ React 18      | Frontend UI               |
+| ⚡ Vite 5         | Frontend tooling          |
+| 🟢 Node.js       | Backend runtime           |
+| 🚂 Express       | REST API                  |
+| 🔐 JWT           | Authentication            |
+| 🔒 bcryptjs      | Password hashing          |
+| 🗄️ LowDB        | Local JSON database       |
+| 🤖 Google Gemini | AI provider               |
+| ⚡ Groq           | AI provider               |
+| 🧠 Cerebras      | AI provider               |
+| 🔗 CORS          | Cross-origin API support  |
+| 🌱 dotenv        | Environment configuration |
+
+The current dependency setup confirms these technologies are part of the project.
 
 ---
 
-## 📸 Screenshots
+## 📁 Project Structure
 
-### 💬 Chat Interface
+```text
+Aivora-AI-Chatbot/
+│
+├── .agents/
+│   └── skills/
+│
+├── public/
+│
+├── src/
+│   ├── assets/
+│   ├── components/
+│   ├── App.jsx
+│   └── main.jsx
+│
+├── assets/
+│   ├── banner.svg
+│   ├── architecture.svg
+│   └── flow.svg
+│
+├── .env.example
+├── .gitignore
+├── database.json
+├── index.html
+├── package.json
+├── package-lock.json
+├── server.js
+├── vite.config.js
+└── README.md
+```
 
-<img src="./assets/chatbot-1.png" alt="Gemini AI Chatbot" width="100%"/>
+---
 
-### 🤖 AI Conversation
+## 🔑 Environment Variables
 
-<img src="./assets/chatbot-2.png" alt="AI Conversation" width="100%"/>
+Create a `.env` file in the project root.
 
-> Replace the image filenames above with your actual screenshots if their names are different.
+Example:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key
+GROQ_API_KEY=your_groq_api_key
+CEREBRAS_API_KEY=your_cerebras_api_key
+
+JWT_SECRET=your_secure_jwt_secret
+
+PORT=5000
+```
+
+The backend reads provider keys and JWT configuration from environment variables.
+
+### ⚠️ Security
+
+Never commit real API keys or secrets.
+
+Use:
+
+```text
+.env
+```
+
+locally and keep secrets out of Git.
 
 ---
 
@@ -184,13 +320,13 @@ The application follows a simple architecture:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/jawasakher/Gemini-AL-Chatbot.git
+git clone https://github.com/jawasakher/Aivora-AI-Chatbot.git
 ```
 
-### 2. Navigate to the project
+### 2. Enter the project
 
 ```bash
-cd Gemini-AL-Chatbot
+cd Aivora-AI-Chatbot
 ```
 
 ### 3. Install dependencies
@@ -199,294 +335,324 @@ cd Gemini-AL-Chatbot
 npm install
 ```
 
-### 4. Create environment variables
+### 4. Configure environment variables
 
-Create a `.env` file in the root directory:
+Create:
 
-```env
-VITE_GEMINI_API_KEY=your_api_key_here
-```
-
-### 5. Start the development server
-
-```bash
-npm run dev
-```
-
-The application will be available locally through the URL shown by Vite.
-
----
-
-## 🔑 Gemini API Configuration
-
-The application requires a Gemini API key.
-
-Your environment file should look like:
-
-```env
-VITE_GEMINI_API_KEY=YOUR_GEMINI_API_KEY
-```
-
-### ⚠️ Important
-
-Never commit your real API key to GitHub.
-
-Make sure `.env` is included in `.gitignore`:
-
-```gitignore
+```text
 .env
-.env.local
-.env.*.local
 ```
 
----
+and add your API keys and JWT secret.
 
-## 🌍 API Availability & Error Handling
-
-One of the practical challenges when working with AI APIs is that availability can depend on:
-
-* 🌍 Geographic region
-* 🔐 API configuration
-* 💳 Billing configuration
-* 📊 Usage limits
-* 🔑 Invalid or expired API keys
-* 🚦 Provider-side restrictions
-
-Instead of showing a generic:
-
-```text
-Failed to fetch
-```
-
-the application should provide a more understandable user-facing error.
-
-Example:
-
-```text
-⚠️ Gemini API is currently unavailable.
-
-The service may be unavailable in your region,
-or the API configuration may need to be checked.
-```
-
-This makes debugging much easier for both developers and users.
-
----
-
-## 📁 Project Structure
-
-```text
-Gemini-AL-Chatbot/
-│
-├── public/
-│
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── App.jsx
-│   ├── main.jsx
-│   └── ...
-│
-├── assets/
-│   ├── banner.svg
-│   ├── architecture.svg
-│   ├── chatbot-1.png
-│   └── chatbot-2.png
-│
-├── .env
-├── .gitignore
-├── index.html
-├── package.json
-├── package-lock.json
-└── README.md
-```
-
-> Update the structure above if your current folders differ.
-
----
-
-## 🔄 Application Flow
-
-<img src="./assets/flow.svg" alt="Application Flow" width="100%"/>
-
-```text
-User opens application
-        │
-        ▼
-   Chat interface
-        │
-        ▼
- User writes message
-        │
-        ▼
- Request sent to Gemini
-        │
-        ├───────────────┐
-        │               │
-        ▼               ▼
-     Success          Error
-        │               │
-        ▼               ▼
- AI response      Friendly error
-        │               │
-        └───────┬───────┘
-                ▼
-          Update the UI
-```
-
----
-
-## 📊 Key Development Concepts
-
-This project demonstrates practical experience with:
-
-### React
-
-* Components
-* Props
-* State management
-* Event handling
-* Conditional rendering
-* API requests
-
-### JavaScript
-
-* Async / Await
-* Promises
-* Error handling
-* Fetch API
-* Array methods
-* Modern ES6+ syntax
-
-### API Integration
-
-* REST API communication
-* Authentication using API keys
-* Request handling
-* Response processing
-* Error handling
-
-### Frontend Engineering
-
-* Responsive layouts
-* Component organization
-* UX-focused error states
-* Loading states
-* Clean UI architecture
-
----
-
-## 🧪 Development
-
-Run the development server:
+### 5. Start the application
 
 ```bash
 npm run dev
 ```
 
-Build the production version:
+The current project is configured to run the Vite frontend and Node backend concurrently with this command.
+
+---
+
+## 🧪 Available Scripts
+
+### Development
+
+```bash
+npm run dev
+```
+
+Runs frontend and backend together.
+
+### Frontend only
+
+```bash
+npm run dev:frontend
+```
+
+### Backend only
+
+```bash
+npm run dev:backend
+```
+
+### Production build
 
 ```bash
 npm run build
 ```
 
-Preview the production build:
+### Preview frontend build
 
 ```bash
 npm run preview
 ```
 
----
-
-## 🏗️ Production Build
-
-Before deploying:
+### Start backend
 
 ```bash
-npm run build
+npm start
 ```
 
-The production files will be generated inside:
-
-```text
-dist/
-```
-
-You can then deploy the project using your preferred hosting provider.
+These scripts are defined in the current `package.json`.
 
 ---
 
-## 🔮 Roadmap
+## 🔌 Backend API
 
-* [x] Gemini API integration
-* [x] Responsive chatbot UI
-* [x] AI message rendering
-* [x] Error handling
-* [x] Environment variables
-* [ ] Markdown response rendering
+Aivora exposes a REST API through Express.
+
+### Health Check
+
+```http
+GET /api/health
+```
+
+Returns the backend status and configured AI providers.
+
+---
+
+### Authentication
+
+```http
+POST /api/register
+```
+
+Register a new user.
+
+```http
+POST /api/login
+```
+
+Authenticate an existing user.
+
+---
+
+### Conversations
+
+Authenticated users can manage their conversations through protected API routes.
+
+Typical operations include:
+
+```text
+GET    /api/conversations
+POST   /api/conversations
+GET    /api/conversations/:id
+DELETE /api/conversations/:id
+```
+
+---
+
+## 🔐 Authentication Flow
+
+```text
+Register
+   │
+   ▼
+Hash Password
+   │
+   ▼
+Store User
+   │
+   ▼
+Login
+   │
+   ▼
+Verify Password
+   │
+   ▼
+Generate JWT
+   │
+   ▼
+Frontend Stores Token
+   │
+   ▼
+Authenticated API Requests
+```
+
+JWT middleware verifies the token before allowing access to protected resources.
+
+---
+
+## 💾 Data Persistence
+
+Aivora currently uses **LowDB** with a JSON file for lightweight local persistence.
+
+```text
+database.json
+      │
+      ├── Users
+      │
+      └── Conversations
+              │
+              └── Messages
+```
+
+This setup keeps the project simple during development while leaving room for a future migration to a production database such as PostgreSQL or MongoDB.
+
+## 🚨 Error Handling
+
+Aivora is designed to provide meaningful feedback when an AI provider cannot process a request.
+
+Possible causes include:
+
+* Invalid API key
+* Missing environment variable
+* Provider availability
+* Usage limits
+* Network problems
+* Provider-side errors
+
+Instead of exposing an unclear technical failure, the frontend can present a user-friendly error state.
+
+---
+
+## 🌍 Multi-Provider Strategy
+
+One of Aivora's strongest architectural decisions is separating the product identity from the AI provider.
+
+```text
+                    ┌─────────────┐
+                    │   Aivora    │
+                    │   Chat UI   │
+                    └──────┬──────┘
+                           │
+                    Provider Layer
+                           │
+            ┌──────────────┼──────────────┐
+            │              │              │
+            ▼              ▼              ▼
+         Gemini           Groq        Cerebras
+```
+
+This means **Aivora remains the product**, while Gemini, Groq and Cerebras are infrastructure providers.
+
+That makes the application easier to evolve into a multi-model AI platform.
+
+---
+
+## 📈 What This Project Demonstrates
+
+### Frontend
+
+* React component architecture
+* State management
+* API integration
+* Responsive UI
+* Chat interface design
+* Loading and error states
+* Conversation navigation
+
+### Backend
+
+* Node.js
+* Express REST APIs
+* Authentication
+* JWT
+* Password hashing
+* Protected routes
+* Database persistence
+* AI provider integration
+
+### Software Engineering
+
+* Environment configuration
+* Separation of frontend/backend responsibilities
+* API-driven architecture
+* User-scoped resources
+* Extensible provider architecture
+
+---
+
+## 🗺️ Roadmap
+
+### ✅ Completed
+
+* [x] React + Vite frontend
+* [x] Express backend
+* [x] AI integration
+* [x] User registration
+* [x] User login
+* [x] JWT authentication
+* [x] Password hashing
+* [x] Persistent conversations
+* [x] Conversation sidebar
+* [x] Create conversation
+* [x] Open conversation
+* [x] Delete conversation
+* [x] Multi-provider architecture
+* [x] API health endpoint
+
+### 🚧 Planned
+
+* [ ] Streaming AI responses
+* [ ] Markdown rendering
 * [ ] Code syntax highlighting
-* [ ] Conversation persistence
-* [ ] Multiple AI models
-* [ ] Dark / Light mode
+* [ ] Message regeneration
+* [ ] Rename conversations
+* [ ] Search conversations
+* [ ] Dark / Light theme
 * [ ] Voice input
-* [ ] Voice responses
-* [ ] Authentication
-* [ ] Chat history
-* [ ] Streaming responses
-* [ ] Backend API layer
+* [ ] Voice output
+* [ ] File uploads
+* [ ] Image understanding
+* [ ] Advanced model selection
+* [ ] Production database
+* [ ] Usage analytics
+* [ ] Rate limiting
+* [ ] Deployment pipeline
 
 ---
 
-## 💡 Future Improvements
+## 🚀 Future Vision
 
-The project can be expanded into a complete AI SaaS platform.
-
-Possible improvements include:
+Aivora can evolve into a complete AI SaaS platform:
 
 ```text
-Authentication
-      ↓
-User Dashboard
-      ↓
-Conversation History
-      ↓
-Multiple AI Models
-      ↓
-Usage Analytics
-      ↓
-Subscription System
-      ↓
-AI SaaS Platform
+                    AIVORA
+                      │
+          ┌───────────┴───────────┐
+          │                       │
+      AI Chat                 AI Tools
+          │                       │
+          ▼                       ▼
+   Multiple Models          File Analysis
+          │                  Web Search
+          │                  Voice AI
+          ▼                       │
+   User Dashboard ◄───────────────┘
+          │
+          ▼
+    Usage Analytics
+          │
+          ▼
+   Subscription System
+          │
+          ▼
+      AI SaaS 🚀
 ```
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome.
-
-### Fork the project
+Contributions, ideas and improvements are welcome.
 
 ```bash
-git fork
+git checkout -b feature/your-feature
 ```
 
-### Create a feature branch
-
 ```bash
-git checkout -b feature/amazing-feature
+git add .
 ```
 
-### Commit your changes
-
 ```bash
-git commit -m "Add amazing feature"
+git commit -m "feat: add your feature"
 ```
 
-### Push the branch
-
 ```bash
-git push origin feature/amazing-feature
+git push origin feature/your-feature
 ```
 
 Then open a Pull Request.
@@ -495,9 +661,9 @@ Then open a Pull Request.
 
 ## 📄 License
 
-This project is available for educational and portfolio purposes.
+This project is intended primarily as a portfolio and learning project.
 
-You may modify and improve the project according to your needs.
+If you plan to reuse the code commercially, review and define an explicit license for the repository.
 
 ---
 
@@ -511,11 +677,11 @@ You may modify and improve the project according to your needs.
 
 Building modern, responsive and user-focused web experiences.
 
-<p>
-  <a href="https://github.com/jawasakher">
-    <img src="https://img.shields.io/badge/GitHub-jawasakher-181717?style=for-the-badge&logo=github" alt="GitHub"/>
-  </a>
-</p>
+<br/>
+
+<a href="https://github.com/jawasakher">
+<img src="https://img.shields.io/badge/GitHub-jawasakher-181717?style=for-the-badge&logo=github"/>
+</a>
 
 </div>
 
@@ -523,12 +689,13 @@ Building modern, responsive and user-focused web experiences.
 
 ## ⭐ Support
 
-If you found this project useful, consider giving it a ⭐ on GitHub.
+If you like **Aivora**, consider giving the repository a ⭐.
 
 <div align="center">
 
-### 🤖 Built with React + Gemini
+### Built with Jawa using React, Node.js & AI
 
-**From UI → API → AI**
+**Aivora — Conversations, reimagined.**
 
 </div>
+
