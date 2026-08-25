@@ -15,6 +15,8 @@ const initialMessages = [
   },
 ];
 
+const AUTH_KEY = 'gemini-chat-auth';
+
 function App() {
   const [theme, setTheme] = useState('dark');
   const [input, setInput] = useState('');
@@ -22,17 +24,99 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [attachedFile, setAttachedFile] = useState('');
   const [error, setError] = useState('');
+  const [authMode, setAuthMode] = useState('login');
+  const [auth, setAuth] = useState(() => {
+    const saved = localStorage.getItem(AUTH_KEY);
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [authForm, setAuthForm] = useState({ username: '', password: '' });
+  const [authError, setAuthError] = useState('');
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
+  useEffect(() => {
+    if (auth) {
+      localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+    } else {
+      localStorage.removeItem(AUTH_KEY);
+    }
+  }, [auth]);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      if (!auth?.token) return;
+
+      try {
+        const res = await fetch('/api/me', {
+          headers: {
+            Authorization: `Bearer ${auth.token}`,
+          },
+        });
+
+        if (!res.ok) {
+          setAuth(null);
+        }
+      } catch (err) {
+        setAuth(null);
+      }
+    };
+
+    fetchCurrentUser();
+  }, [auth?.token]);
+
   const suggestionList = useMemo(() => starterSuggestions, []);
+
+  const handleAuthSubmit = async (event) => {
+    event.preventDefault();
+
+    const username = authForm.username.trim();
+    const password = authForm.password.trim();
+
+    if (!username || !password) {
+      setAuthError('Username and password are required.');
+      return;
+    }
+
+    if (password.length < 6) {
+      setAuthError('Password must be at least 6 characters.');
+      return;
+    }
+
+    try {
+      const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Authentication failed');
+      }
+
+      setAuth({ token: data.token, user: data.user });
+      setAuthForm({ username: '', password: '' });
+      setAuthError('');
+    } catch (error) {
+      setAuthError(error.message || 'Authentication failed.');
+    }
+  };
+
+  const handleLogout = () => {
+    setAuth(null);
+    setAuthError('');
+  };
 
   const handleSend = async (promptText) => {
     const trimmed = (promptText || input).trim();
-    if (!trimmed) return;
+    if (!trimmed || !auth?.token) return;
 
     const userMessage = {
       id: Date.now(),
@@ -51,6 +135,7 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${auth.token}`,
         },
         body: JSON.stringify({ prompt: trimmed }),
       });
@@ -99,12 +184,81 @@ function App() {
     }
   };
 
+  if (!auth) {
+    return (
+      <div className="auth-shell">
+        <div className="auth-card">
+          <div className="auth-badge">Gemini AI</div>
+          <h1>{authMode === 'login' ? 'Welcome back' : 'Create account'}</h1>
+          <p>
+            {authMode === 'login'
+              ? 'Sign in to continue to your chatbot dashboard.'
+              : 'Create a new account to start chatting.'}
+          </p>
+
+          <div className="auth-toggle">
+            <button
+              type="button"
+              className={authMode === 'login' ? 'toggle-btn active' : 'toggle-btn'}
+              onClick={() => setAuthMode('login')}
+            >
+              Login
+            </button>
+            <button
+              type="button"
+              className={authMode === 'register' ? 'toggle-btn active' : 'toggle-btn'}
+              onClick={() => setAuthMode('register')}
+            >
+              Register
+            </button>
+          </div>
+
+          <form className="auth-form" onSubmit={handleAuthSubmit}>
+            <label>
+              Username
+              <input
+                type="text"
+                value={authForm.username}
+                onChange={(e) => setAuthForm((prev) => ({ ...prev, username: e.target.value }))}
+                placeholder="Enter username"
+              />
+            </label>
+
+            <label>
+              Password
+              <input
+                type="password"
+                value={authForm.password}
+                onChange={(e) => setAuthForm((prev) => ({ ...prev, password: e.target.value }))}
+                placeholder={authMode === 'login' ? 'Enter password' : 'At least 6 characters'}
+              />
+            </label>
+
+            {authError && <div className="auth-error">{authError}</div>}
+
+            <button type="submit" className="auth-button">
+              {authMode === 'login' ? 'Login' : 'Create account'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-shell">
       <div className="chat-app">
         <header className="app-header">
-          <h1 className="heading">Hello, there</h1>
-          <h2 className="sub-heading">How can I help you today?</h2>
+          <div className="header-row">
+            <div>
+              <h1 className="heading">Hello, {auth.user.username}</h1>
+              <h2 className="sub-heading">How can I help you today?</h2>
+            </div>
+
+            <button type="button" className="logout-btn" onClick={handleLogout}>
+              Logout
+            </button>
+          </div>
         </header>
 
         <div className="chat-body">
