@@ -1,9 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import Database from 'better-sqlite3';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { LowSync } from 'lowdb';
+import { JSONFileSync } from 'lowdb/node';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -13,23 +14,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
-const API_KEY = process.env.GEMINI_API_KEY;
+const providerKeys = {
+  groq: process.env.GROQ_API_KEY,
+  cerebras: process.env.CEREBRAS_API_KEY,
+  gemini: process.env.GEMINI_API_KEY,
+};
 const JWT_SECRET = process.env.JWT_SECRET || 'change_this_secret';
-const db = new Database(path.join(__dirname, 'database.sqlite'));
+const db = new LowSync(new JSONFileSync(path.join(__dirname, 'database.json')), { users: [] });
 
 app.use(cors());
 app.use(express.json());
 
-const createUsersTable = () => {
-  db.prepare(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `).run();
+const readDatabase = () => {
+  db.read();
+  db.data ||= { users: [] };
+  db.data.users ||= [];
 };
+
+const writeDatabase = () => db.write();
 
 const generateToken = (user) =>
   jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '7d' });
@@ -51,10 +53,14 @@ const requireAuth = (req, res, next) => {
   }
 };
 
-createUsersTable();
+readDatabase();
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Gemini backend is running' });
+  res.json({
+    status: 'ok',
+    message: 'AI backend is running',
+    providers: Object.fromEntries(Object.entries(providerKeys).map(([name, key]) => [name, Boolean(key)])),
+  });
 });
 
 app.post('/api/register', (req, res) => {
@@ -73,15 +79,22 @@ app.post('/api/register', (req, res) => {
     return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(trimmedUsername.toLowerCase());
+  readDatabase();
+  const normalizedUsername = trimmedUsername.toLowerCase();
+  const existing = db.data.users.find((user) => user.username === normalizedUsername);
   if (existing) {
     return res.status(409).json({ error: 'Username already exists' });
   }
 
   const hashedPassword = bcrypt.hashSync(password, 10);
-  const user = db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(trimmedUsername.toLowerCase(), hashedPassword);
-
-  const createdUser = db.prepare('SELECT id, username FROM users WHERE id = ?').get(user.lastInsertRowid);
+  const createdUser = {
+    id: db.data.users.length ? Math.max(...db.data.users.map((user) => user.id)) + 1 : 1,
+    username: normalizedUsername,
+    password: hashedPassword,
+    created_at: new Date().toISOString(),
+  };
+  db.data.users.push(createdUser);
+  writeDatabase();
   const token = generateToken(createdUser);
 
   return res.status(201).json({
@@ -97,7 +110,8 @@ app.post('/api/login', (req, res) => {
     return res.status(400).json({ error: 'Username and password are required' });
   }
 
-  const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username.trim().toLowerCase());
+  readDatabase();
+  const user = db.data.users.find((item) => item.username === username.trim().toLowerCase());
   if (!user) {
     return res.status(401).json({ error: 'Invalid username or password' });
   }
@@ -118,7 +132,8 @@ app.post('/api/login', (req, res) => {
 });
 
 app.get('/api/me', requireAuth, (req, res) => {
-  const user = db.prepare('SELECT id, username FROM users WHERE id = ?').get(req.user.id);
+  readDatabase();
+  const user = db.data.users.find((item) => item.id === req.user.id);
 
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
@@ -127,6 +142,66 @@ app.get('/api/me', requireAuth, (req, res) => {
   return res.json({ user });
 });
 
+const readResponse = async (response) => {
+  const text = await response.text();
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch (error) {
+    return {};
+  }
+};
+
+const callCompatibleProvider = async (provider, prompt, apiKey) => {
+  const config = {
+    groq: {
+      url: 'https://api.groq.com/openai/v1/chat/completions',
+      model: process.env.GROQ_MODEL || 'openai/gpt-oss-120b',
+    },
+    cerebras: {
+      url: 'https://api.cerebras.ai/v1/chat/completions',
+      model: process.env.CEREBRAS_MODEL || 'llama-3.3-70b',
+    },
+  }[provider];
+
+  const response = await fetch(config.url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: config.model,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+    }),
+  });
+  const data = await readResponse(response);
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || `${provider} request failed (${response.status})`);
+  }
+
+  return data?.choices?.[0]?.message?.content || '';
+};
+
+const callGemini = async (prompt, apiKey) => {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: prompt }] }] }),
+    }
+  );
+  const data = await readResponse(response);
+
+  if (!response.ok) {
+    throw new Error(data?.error?.message || `Gemini request failed (${response.status})`);
+  }
+
+  return data?.candidates?.[0]?.content?.parts?.map((part) => part.text).join('') || '';
+};
+
 app.post('/api/chat', requireAuth, async (req, res) => {
   const { prompt } = req.body;
 
@@ -134,49 +209,36 @@ app.post('/api/chat', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'Prompt is required' });
   }
 
-  if (!API_KEY) {
+  const providers = [
+    ['groq', providerKeys.groq],
+    ['cerebras', providerKeys.cerebras],
+    ['gemini', providerKeys.gemini],
+  ].filter(([, key]) => key);
+
+  if (!providers.length) {
     return res.status(500).json({
-      error: 'GEMINI_API_KEY is missing. Add it to a .env file.',
+      error: 'No AI provider is configured. Add GROQ_API_KEY or CEREBRAS_API_KEY to .env.',
     });
   }
 
-  try {
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [{ text: prompt }],
-            },
-          ],
-        }),
-      }
-    );
+  const failures = [];
+  for (const [provider, apiKey] of providers) {
+    try {
+      const reply = provider === 'gemini'
+        ? await callGemini(prompt.trim(), apiKey)
+        : await callCompatibleProvider(provider, prompt.trim(), apiKey);
 
-    const data = await geminiResponse.json();
-
-    if (!geminiResponse.ok) {
-      return res.status(400).json({
-        error: data?.error?.message || 'Failed to generate content with Gemini',
-      });
+      if (reply) return res.json({ reply, provider });
+      failures.push(`${provider}: empty response`);
+    } catch (error) {
+      failures.push(`${provider}: ${error.message}`);
+      console.error(`${provider} API error:`, error.message);
     }
-
-    const reply =
-      data?.candidates?.[0]?.content?.parts
-        ?.map((part) => part.text)
-        ?.join('') || 'No response generated.';
-
-    return res.json({ reply });
-  } catch (error) {
-    console.error('Gemini API error:', error);
-    return res.status(500).json({ error: 'Server error while contacting Gemini API' });
   }
+
+  return res.status(502).json({
+    error: `All configured AI providers failed. ${failures.join(' | ')}`,
+  });
 });
 
 app.listen(PORT, () => {

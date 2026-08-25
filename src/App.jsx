@@ -17,6 +17,35 @@ const initialMessages = [
 
 const AUTH_KEY = 'gemini-chat-auth';
 
+const normalizeAuth = (value) => {
+  if (!value || typeof value !== 'object') return null;
+
+  if (value.token && value.user) return value;
+
+  if (value.username) {
+    return {
+      token: '',
+      user: { username: value.username },
+    };
+  }
+
+  return null;
+};
+
+const parseJsonSafely = async (response) => {
+  const text = await response.text();
+
+  if (!text) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    return { error: 'Server returned an invalid response.' };
+  }
+};
+
 function App() {
   const [theme, setTheme] = useState('dark');
   const [input, setInput] = useState('');
@@ -26,8 +55,12 @@ function App() {
   const [error, setError] = useState('');
   const [authMode, setAuthMode] = useState('login');
   const [auth, setAuth] = useState(() => {
-    const saved = localStorage.getItem(AUTH_KEY);
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem(AUTH_KEY);
+      return saved ? normalizeAuth(JSON.parse(saved)) : null;
+    } catch (error) {
+      return null;
+    }
   });
   const [authForm, setAuthForm] = useState({ username: '', password: '' });
   const [authError, setAuthError] = useState('');
@@ -95,7 +128,7 @@ function App() {
         body: JSON.stringify({ username, password }),
       });
 
-      const data = await response.json();
+      const data = await parseJsonSafely(response);
 
       if (!response.ok) {
         throw new Error(data.error || 'Authentication failed');
@@ -140,7 +173,7 @@ function App() {
         body: JSON.stringify({ prompt: trimmed }),
       });
 
-      const data = await response.json();
+      const data = await parseJsonSafely(response);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to get answer from Gemini');
@@ -160,7 +193,7 @@ function App() {
         {
           id: Date.now() + 2,
           role: 'assistant',
-          text: 'Sorry, I could not connect to the Gemini API. Please add a valid GEMINI_API_KEY in the backend environment file.',
+          text: 'Sorry, I could not connect to an AI provider. Please add GROQ_API_KEY or CEREBRAS_API_KEY in the backend .env file.',
         },
       ]);
     } finally {
@@ -188,7 +221,7 @@ function App() {
     return (
       <div className="auth-shell">
         <div className="auth-card">
-          <div className="auth-badge">Gemini AI</div>
+          <div className="auth-badge"><span>✦</span> Aivora AI</div>
           <h1>{authMode === 'login' ? 'Welcome back' : 'Create account'}</h1>
           <p>
             {authMode === 'login'
@@ -247,109 +280,71 @@ function App() {
 
   return (
     <div className="app-shell">
-      <div className="chat-app">
-        <header className="app-header">
-          <div className="header-row">
-            <div>
-              <h1 className="heading">Hello, {auth.user.username}</h1>
-              <h2 className="sub-heading">How can I help you today?</h2>
-            </div>
-
-            <button type="button" className="logout-btn" onClick={handleLogout}>
-              Logout
+      <div className="chat-app hero-app">
+        <header className="topbar">
+          <div className="brand-mark"><span className="brand-spark">✦</span> Aivora <span>INTELLIGENCE STUDIO</span></div>
+          <div className="topbar-actions">
+            <span className="online-status"><i /> Aivora Core</span>
+            <button type="button" className="icon-btn material-symbols-rounded" onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))} aria-label="Toggle theme">
+              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
             </button>
+            <button type="button" className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
         </header>
 
-        <div className="chat-body">
-          <ul className="suggestions">
-            {suggestionList.map((suggestion) => (
-              <li key={suggestion} className="suggestions-item" onClick={() => handleSuggestionClick(suggestion)}>
-                <p className="text">{suggestion}</p>
-                <span className="material-symbols-rounded">
-                  {suggestion.toLowerCase().includes('design') ? 'draw' : suggestion.toLowerCase().includes('learn') ? 'lightbulb' : suggestion.toLowerCase().includes('debug') ? 'explore' : 'code'}
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          <div className="messages">
-            {messages.map((message) => (
-              <div key={message.id} className={`message-row ${message.role}`}>
-                <div className="message-bubble">{message.text}</div>
-              </div>
-            ))}
-
-            {isLoading && (
-              <div className="message-row assistant">
-                <div className="message-bubble loading">Thinking...</div>
-              </div>
-            )}
+        <div className="hero-content">
+          <div className="bot-orbit" aria-hidden="true">
+            <div className="bot-antenna" />
+            <div className="bot-head"><div className="bot-screen"><span>⌣</span><span>⌣</span></div></div>
+            <div className="bot-neck" />
+            <div className="bot-body"><b>A</b></div>
+            <div className="bot-arm left" /><div className="bot-arm right" />
           </div>
 
-          {error && <div className="error-banner">{error}</div>}
-        </div>
-
-        <div className="prompt-container">
-          <div className="prompt-wrapper">
-            <form className="prompt-form" onSubmit={handleSubmit}>
-              <input
-                type="text"
-                className="prompt-input"
-                placeholder="Ask Gemini"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                required
-              />
-
-              <div className="prompt-actions">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileSelect}
-                  style={{ display: 'none' }}
-                />
-
-                <button
-                  type="button"
-                  className="action-btn material-symbols-rounded"
-                  onClick={() => fileInputRef.current?.click()}
-                  aria-label="Attach file"
-                >
-                  attach_file
+          <div className="hero-copy">
+            <div className="gemini-star">✦</div>
+            <h1 className="hero-title">Hello, {auth.user?.username || 'there'}</h1>
+            <p className="hero-subtitle">Your ideas, accelerated.</p>
+            <div className="mode-chips" role="group" aria-label="Prompt modes">
+              {[
+                ['💬', 'Chat', 'Ask me anything'],
+                ['💡', 'Explain', 'Explain this simply'],
+                ['</>', 'Code', 'Help me write code'],
+                ['✎', 'Write', 'Help me write'],
+              ].map(([icon, label, prompt]) => (
+                <button type="button" className={`mode-chip ${label.toLowerCase()}`} key={label} onClick={() => setInput(prompt)}>
+                  <strong>{icon}</strong> {label}
                 </button>
+              ))}
+            </div>
+          </div>
 
-                <button
-                  type="submit"
-                  className="action-btn material-symbols-rounded"
-                  id="send-prompt-btn"
-                  aria-label="Send message"
-                >
-                  arrow_upward
-                </button>
-              </div>
+          <div className="chat-body hero-chat-body">
+            <div className="messages">
+              {messages.length > 1 && messages.map((message) => (
+                <div key={message.id} className={`message-row ${message.role}`}>
+                  <div className="message-bubble">{message.text}</div>
+                </div>
+              ))}
+              {isLoading && <div className="message-row assistant"><div className="message-bubble loading">Thinking...</div></div>}
+            </div>
+            {error && <div className="error-banner">{error}</div>}
+          </div>
+
+          <div className="prompt-container hero-prompt-container">
+            <form className="hero-prompt" onSubmit={handleSubmit}>
+              <span className="prompt-spark">✦</span>
+              <input type="text" className="prompt-input" placeholder="Type your message..." value={input} onChange={(e) => setInput(e.target.value)} required />
+              <input type="file" ref={fileInputRef} onChange={handleFileSelect} style={{ display: 'none' }} />
+              <button type="button" className="prompt-tool material-symbols-rounded" onClick={() => fileInputRef.current?.click()} aria-label="Attach file">attach_file</button>
+              <button type="submit" className="send-orb material-symbols-rounded" aria-label="Send message">arrow_upward</button>
             </form>
-
-            <button
-              type="button"
-              className="icon-btn material-symbols-rounded"
-              onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? 'light_mode' : 'dark_mode'}
-            </button>
-
-            <button
-              type="button"
-              className="icon-btn material-symbols-rounded"
-              onClick={() => setMessages(initialMessages)}
-              aria-label="Delete chats"
-            >
-              delete
-            </button>
+            {attachedFile && <div className="attached-file">📎 {attachedFile}</div>}
           </div>
 
-          {attachedFile && <div className="attached-file">📎 {attachedFile}</div>}
+          <div className="suggestion-strip">
+            {suggestionList.slice(0, 3).map((suggestion) => <button type="button" key={suggestion} onClick={() => handleSuggestionClick(suggestion)}>{suggestion}</button>)}
+          </div>
         </div>
       </div>
     </div>

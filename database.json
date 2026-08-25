@@ -1,0 +1,16 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "test_1787653235679",
+      "password": "$2a$10$ptjsyglv4IvA3zJlO6pvFejpusdGmmolqEmQgQDyfuDrRoayMZ.LS",
+      "created_at": "2026-08-25T10:20:36.143Z"
+    },
+    {
+      "id": 2,
+      "username": "jawa sakher",
+      "password": "$2a$10$YB.XiyQbsMt6X/xXrTjGgu5UJYjcDQX4281wenPGxTENVfHJSszbC",
+      "created_at": "2026-08-25T10:25:46.512Z"
+    }
+  ]
+}

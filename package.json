@@ -1,5 +1,5 @@
 {
-  "name": "gemini-ai-chatbot",
+  "name": "aivora-ai-chatbot",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -12,12 +12,13 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@google/genai": "^2.18.0",
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^11.7.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "jsonwebtoken": "^9.0.3",
+    "lowdb": "^7.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
