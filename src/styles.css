@@ -196,6 +196,7 @@ body {
   border: 1px solid rgba(148, 163, 184, 0.15);
   border-radius: 28px;
   box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;
@@ -471,6 +472,7 @@ body {
 .material-symbols-rounded {
   font-family: 'Material Symbols Rounded';
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  -webkit-user-select: none;
   user-select: none;
 }
 
@@ -611,3 +613,18 @@ body {
 
 @media (max-width: 900px) { .conversation-sidebar { width: 210px; flex-basis: 210px; }.app-layout { gap: 10px; } }
 @media (max-width: 700px) { .app-layout { display: block; }.conversation-sidebar { width: 100%; margin-bottom: 12px; padding: 14px; }.sidebar-brand { display: inline-block; padding-bottom: 12px; }.new-chat-btn { width: auto; float: right; margin-top: -4px; padding: 9px 12px; }.sidebar-label { clear: both; margin-top: 16px; }.conversation-list { max-height: 110px; overflow-y: auto; }.hero-app { min-height: calc(100vh - 12px); } }
+
+.topbar-leading { display: flex; align-items: center; gap: 12px; }
+.sidebar-toggle { display: none; width: 40px; height: 40px; border: 1px solid rgba(110, 174, 255, .25); border-radius: 10px; color: #cfe2ff; background: rgba(94, 165, 255, .1); cursor: pointer; }
+.sidebar-overlay { display: none; }
+.hero-chat-body .messages { max-height: min(46vh, 520px); }
+
+@media (max-width: 900px) {
+  .app-shell { display: block; padding: 0; }
+  .app-layout { width: 100%; min-height: 100vh; display: block; }
+  .conversation-sidebar { position: fixed; z-index: 20; inset: 0 auto 0 0; width: min(310px, 86vw); height: 100vh; margin: 0; border-radius: 0 20px 20px 0; transform: translateX(-105%); transition: transform .22s ease; overflow-y: auto; }
+  .conversation-sidebar.open { transform: translateX(0); }
+  .sidebar-toggle { display: inline-grid; place-items: center; }
+  .sidebar-overlay { display: block; position: fixed; z-index: 15; inset: 0; width: 100%; border: 0; background: rgba(2, 8, 23, .58); cursor: pointer; }
+  .chat-app.hero-app { width: 100%; min-height: 100vh; border-radius: 0; }
+}

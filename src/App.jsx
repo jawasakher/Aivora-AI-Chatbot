@@ -144,11 +144,24 @@ function App() {
   const [conversations, setConversations] = useState([]);
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [copiedMessageId, setCopiedMessageId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const activeConversationIdRef = useRef(null);
   const fileInputRef = useRef(null);
+  const messagesRef = useRef(null);
+
+  const setActiveConversation = (conversationId) => {
+    activeConversationIdRef.current = conversationId;
+    setActiveConversationId(conversationId);
+  };
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    const messageList = messagesRef.current;
+    if (messageList) messageList.scrollTop = messageList.scrollHeight;
+  }, [messages, isLoading]);
 
   useEffect(() => {
     if (auth) {
@@ -191,7 +204,7 @@ function App() {
     const data = await parseJsonSafely(response);
     if (!response.ok) throw new Error(data.error || 'Could not load conversations');
     setConversations(data.conversations || []);
-    if (data.conversations?.length && !activeConversationId) {
+    if (data.conversations?.length && !activeConversationIdRef.current) {
       await openConversation(data.conversations[0].id);
     }
   };
@@ -200,7 +213,7 @@ function App() {
     const response = await fetch(`/api/conversations/${conversationId}`, { headers: authHeaders() });
     const data = await parseJsonSafely(response);
     if (!response.ok) return;
-    setActiveConversationId(conversationId);
+    setActiveConversation(conversationId);
     setMessages(data.messages?.length ? data.messages : initialMessages);
   };
 
@@ -213,9 +226,10 @@ function App() {
     const data = await parseJsonSafely(response);
     if (!response.ok) return;
     setConversations((prev) => [data.conversation, ...prev]);
-    setActiveConversationId(data.conversation.id);
+    setActiveConversation(data.conversation.id);
     setMessages(initialMessages);
     setError('');
+    setSidebarOpen(false);
   };
 
   const deleteConversation = async (conversationId) => {
@@ -227,7 +241,7 @@ function App() {
     const remaining = conversations.filter((conversation) => conversation.id !== conversationId);
     setConversations(remaining);
     if (activeConversationId === conversationId) {
-      setActiveConversationId(null);
+      setActiveConversation(null);
       setMessages(initialMessages);
     }
   };
@@ -284,7 +298,9 @@ function App() {
 
   const handleSend = async (promptText) => {
     const trimmed = (promptText || input).trim();
-    if (!trimmed || !auth?.token) return;
+    if (!trimmed || !auth?.token || isLoading) return;
+
+    const conversationId = activeConversationIdRef.current;
 
     const userMessage = {
       id: Date.now(),
@@ -297,6 +313,7 @@ function App() {
     setAttachedFile('');
     setError('');
     setIsLoading(true);
+    const replyId = Date.now() + 1;
 
     try {
       const response = await fetch('/api/chat', {
@@ -305,7 +322,7 @@ function App() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${auth.token}`,
         },
-        body: JSON.stringify({ prompt: trimmed, conversationId: activeConversationId }),
+        body: JSON.stringify({ prompt: trimmed, conversationId }),
       });
 
       if (!response.ok) {
@@ -313,7 +330,6 @@ function App() {
         throw new Error(data.error || 'Failed to get answer from Gemini');
       }
 
-      const replyId = Date.now() + 1;
       setMessages((prev) => [...prev, { id: replyId, role: 'assistant', text: '' }]);
       const data = await readStreamingReply(response, (chunk) => {
         setMessages((prev) => prev.map((message) => (
@@ -321,20 +337,14 @@ function App() {
         )));
       });
 
-      if (data.conversationId && data.conversationId !== activeConversationId) {
-        setActiveConversationId(data.conversationId);
+      if (data.conversationId && data.conversationId !== activeConversationIdRef.current) {
+        setActiveConversation(data.conversationId);
       }
       await loadConversations();
     } catch (err) {
-      setError(err.message || 'Something went wrong.');
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now() + 2,
-          role: 'assistant',
-          text: 'Sorry, I could not connect to an AI provider. Please add GROQ_API_KEY or CEREBRAS_API_KEY in the backend .env file.',
-        },
-      ]);
+      const message = err.message || 'Something went wrong.';
+      setError(message);
+      setMessages((prev) => prev.filter((item) => item.id !== replyId));
     } finally {
       setIsLoading(false);
     }
@@ -426,7 +436,7 @@ function App() {
   return (
     <div className="app-shell">
       <div className="app-layout">
-        <aside className="conversation-sidebar">
+        <aside className={`conversation-sidebar ${sidebarOpen ? 'open' : ''}`}>
           <div className="sidebar-brand"><span>✦</span> Aivora</div>
           <button type="button" className="new-chat-btn" onClick={createConversation}>
             <span className="material-symbols-rounded">add</span> New conversation
@@ -445,10 +455,14 @@ function App() {
             ))}
           </div>
         </aside>
+        {sidebarOpen && <button type="button" className="sidebar-overlay" aria-label="Close conversations" onClick={() => setSidebarOpen(false)} />}
 
         <div className="chat-app hero-app">
         <header className="topbar">
-          <div className="brand-mark"><span className="brand-spark">✦</span> Aivora <span>INTELLIGENCE STUDIO</span></div>
+          <div className="topbar-leading">
+            <button type="button" className="sidebar-toggle material-symbols-rounded" onClick={() => setSidebarOpen((open) => !open)} aria-label="Open conversations">menu</button>
+            <div className="brand-mark"><span className="brand-spark">✦</span> Aivora <span>INTELLIGENCE STUDIO</span></div>
+          </div>
           <div className="topbar-actions">
             <span className="online-status"><i /> Aivora Core</span>
             <button type="button" className="icon-btn material-symbols-rounded" onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))} aria-label="Toggle theme">
@@ -486,7 +500,7 @@ function App() {
           </div>
 
           <div className="chat-body hero-chat-body">
-            <div className="messages">
+            <div className="messages" ref={messagesRef}>
               {messages.length > 1 && messages.map((message) => (
                 <div key={message.id} className={`message-row ${message.role}`}>
                   <div className="message-bubble">
