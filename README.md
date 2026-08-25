@@ -715,7 +715,7 @@ If you like **Aivora**, consider giving the repository a ⭐.
 
 <div align="center">
 
-### Built with ❤️ using React, Node.js & AI
+### Built with Jawa using React, Node.js & AI
 
 **Aivora — Conversations, reimagined.**
 
