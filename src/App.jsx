@@ -15,21 +15,13 @@ const initialMessages = [
   },
 ];
 
-const demoReplies = {
-  default: 'This is a working React chatbot UI. To connect it to a real Gemini API, add your API key and call the Gemini endpoint from your backend or frontend using fetch.',
-  coding: 'A clean approach is to break the task into requirements, plan the component structure, and then implement and test each part incrementally.',
-  design: 'For a productive home office, focus on ergonomic seating, proper lighting, cable management, and a layout that supports deep work.',
-  learning: 'To improve in 2025, combine practical projects, JavaScript/React fundamentals, debugging practice, and a consistent learning schedule.',
-  tools: 'Useful tools include Chrome DevTools, ESLint, Prettier, React DevTools, Postman, and browser performance profilers.',
-  todo: 'A simple todo component usually includes state for items, input handling, add action, toggle completion, and delete action.',
-};
-
 function App() {
   const [theme, setTheme] = useState('dark');
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [attachedFile, setAttachedFile] = useState('');
+  const [error, setError] = useState('');
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -38,29 +30,7 @@ function App() {
 
   const suggestionList = useMemo(() => starterSuggestions, []);
 
-  const getAssistantReply = (prompt) => {
-    const normalized = prompt.toLowerCase();
-
-    if (normalized.includes('design') || normalized.includes('office') || normalized.includes('workspace')) {
-      return demoReplies.design;
-    }
-    if (normalized.includes('web development') || normalized.includes('learn') || normalized.includes('2025')) {
-      return demoReplies.learning;
-    }
-    if (normalized.includes('debug') || normalized.includes('javascript') || normalized.includes('tool')) {
-      return demoReplies.tools;
-    }
-    if (normalized.includes('react') || normalized.includes('todo') || normalized.includes('component')) {
-      return demoReplies.todo;
-    }
-    if (normalized.includes('code') || normalized.includes('coding') || normalized.includes('program')) {
-      return demoReplies.coding;
-    }
-
-    return demoReplies.default;
-  };
-
-  const handleSend = (promptText) => {
+  const handleSend = async (promptText) => {
     const trimmed = (promptText || input).trim();
     if (!trimmed) return;
 
@@ -73,18 +43,44 @@ function App() {
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setAttachedFile('');
+    setError('');
     setIsLoading(true);
 
-    window.setTimeout(() => {
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt: trimmed }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to get answer from Gemini');
+      }
+
       const reply = {
         id: Date.now() + 1,
         role: 'assistant',
-        text: getAssistantReply(trimmed),
+        text: data.reply || 'No response received.',
       };
 
       setMessages((prev) => [...prev, reply]);
+    } catch (err) {
+      setError(err.message || 'Something went wrong.');
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 2,
+          role: 'assistant',
+          text: 'Sorry, I could not connect to the Gemini API. Please add a valid GEMINI_API_KEY in the backend environment file.',
+        },
+      ]);
+    } finally {
       setIsLoading(false);
-    }, 650);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -136,6 +132,8 @@ function App() {
               </div>
             )}
           </div>
+
+          {error && <div className="error-banner">{error}</div>}
         </div>
 
         <div className="prompt-container">
