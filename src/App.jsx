@@ -46,6 +46,33 @@ const parseJsonSafely = async (response) => {
   }
 };
 
+const readStreamingReply = async (response, onChunk) => {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let result = {};
+
+  const processLines = (text) => {
+    buffer += text;
+    const lines = buffer.split('\n');
+    buffer = lines.pop() || '';
+
+    lines.filter(Boolean).forEach((line) => {
+      const event = JSON.parse(line);
+      if (event.type === 'chunk') onChunk(event.text);
+      if (event.type === 'done') result = event;
+    });
+  };
+
+  while (true) {
+    const { value, done } = await reader.read();
+    processLines(decoder.decode(value || new Uint8Array(), { stream: !done }));
+    if (done) break;
+  }
+
+  return result;
+};
+
 const renderInlineMarkdown = (text) => {
   const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\([^\)]+\))/g);
 
@@ -281,19 +308,19 @@ function App() {
         body: JSON.stringify({ prompt: trimmed, conversationId: activeConversationId }),
       });
 
-      const data = await parseJsonSafely(response);
-
       if (!response.ok) {
+        const data = await parseJsonSafely(response);
         throw new Error(data.error || 'Failed to get answer from Gemini');
       }
 
-      const reply = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        text: data.reply || 'No response received.',
-      };
+      const replyId = Date.now() + 1;
+      setMessages((prev) => [...prev, { id: replyId, role: 'assistant', text: '' }]);
+      const data = await readStreamingReply(response, (chunk) => {
+        setMessages((prev) => prev.map((message) => (
+          message.id === replyId ? { ...message, text: message.text + chunk } : message
+        )));
+      });
 
-      setMessages((prev) => [...prev, reply]);
       if (data.conversationId && data.conversationId !== activeConversationId) {
         setActiveConversationId(data.conversationId);
       }

@@ -321,7 +321,19 @@ app.post('/api/chat', requireAuth, async (req, res) => {
         db.data.messages.push(assistantMessage);
         conversation.updated_at = assistantMessage.created_at;
         writeDatabase();
-        return res.json({ reply, provider, conversationId: conversation.id });
+
+        res.status(200);
+        res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
+        const chunkSize = 32;
+        for (let index = 0; index < reply.length; index += chunkSize) {
+          res.write(`${JSON.stringify({ type: 'chunk', text: reply.slice(index, index + chunkSize) })}\n`);
+          await new Promise((resolve) => setTimeout(resolve, 18));
+        }
+        res.write(`${JSON.stringify({ type: 'done', provider, conversationId: conversation.id })}\n`);
+        return res.end();
       }
       failures.push(`${provider}: empty response`);
     } catch (error) {
