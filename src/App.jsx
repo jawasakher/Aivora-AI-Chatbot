@@ -16,6 +16,8 @@ const initialMessages = [
 ];
 
 const AUTH_KEY = 'gemini-chat-auth';
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const apiUrl = (path) => `${API_BASE_URL}${path}`;
 
 const normalizeAuth = (value) => {
   if (!value || typeof value !== 'object') return null;
@@ -176,7 +178,7 @@ function App() {
       if (!auth?.token) return;
 
       try {
-        const res = await fetch('/api/me', {
+        const res = await fetch(apiUrl('/api/me'), {
           headers: {
             Authorization: `Bearer ${auth.token}`,
           },
@@ -200,7 +202,7 @@ function App() {
   });
 
   const loadConversations = async () => {
-    const response = await fetch('/api/conversations', { headers: authHeaders() });
+    const response = await fetch(apiUrl('/api/conversations'), { headers: authHeaders() });
     const data = await parseJsonSafely(response);
     if (!response.ok) throw new Error(data.error || 'Could not load conversations');
     setConversations(data.conversations || []);
@@ -210,7 +212,7 @@ function App() {
   };
 
   const openConversation = async (conversationId) => {
-    const response = await fetch(`/api/conversations/${conversationId}`, { headers: authHeaders() });
+    const response = await fetch(apiUrl(`/api/conversations/${conversationId}`), { headers: authHeaders() });
     const data = await parseJsonSafely(response);
     if (!response.ok) return;
     setActiveConversation(conversationId);
@@ -218,7 +220,7 @@ function App() {
   };
 
   const createConversation = async () => {
-    const response = await fetch('/api/conversations', {
+    const response = await fetch(apiUrl('/api/conversations'), {
       method: 'POST',
       headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: 'New conversation' }),
@@ -233,7 +235,7 @@ function App() {
   };
 
   const deleteConversation = async (conversationId) => {
-    const response = await fetch(`/api/conversations/${conversationId}`, {
+    const response = await fetch(apiUrl(`/api/conversations/${conversationId}`), {
       method: 'DELETE',
       headers: authHeaders(),
     });
@@ -269,7 +271,7 @@ function App() {
 
     try {
       const endpoint = authMode === 'login' ? '/api/login' : '/api/register';
-      const response = await fetch(endpoint, {
+      const response = await fetch(apiUrl(endpoint), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -316,7 +318,7 @@ function App() {
     const replyId = Date.now() + 1;
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(apiUrl('/api/chat'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
