@@ -40,7 +40,14 @@
       "user_id": 2,
       "title": "New conversation",
       "created_at": "2026-08-26T10:30:58.306Z",
-      "updated_at": "2026-08-26T10:31:05.933Z"
+      "updated_at": "2026-08-26T10:37:08.454Z"
+    },
+    {
+      "id": 5,
+      "user_id": 2,
+      "title": "New conversation",
+      "created_at": "2026-08-26T10:37:13.196Z",
+      "updated_at": "2026-08-26T10:37:18.734Z"
     }
   ],
   "messages": [
@@ -113,6 +120,34 @@
       "role": "assistant",
       "text": "Sure! What's a hobby or activity you’ve gotten into recently that you’re excited about?",
       "created_at": "2026-08-26T10:31:05.933Z"
+    },
+    {
+      "id": 11,
+      "conversation_id": 4,
+      "role": "user",
+      "text": "Explain this simply",
+      "created_at": "2026-08-26T10:37:07.078Z"
+    },
+    {
+      "id": 12,
+      "conversation_id": 4,
+      "role": "assistant",
+      "text": "Sure! Could you let me know what specific topic, concept, or piece of information you’d like me to explain in simple terms? That way I can give you a clear and helpful explanation.",
+      "created_at": "2026-08-26T10:37:08.454Z"
+    },
+    {
+      "id": 13,
+      "conversation_id": 5,
+      "role": "user",
+      "text": "Help me write code",
+      "created_at": "2026-08-26T10:37:17.146Z"
+    },
+    {
+      "id": 14,
+      "conversation_id": 5,
+      "role": "assistant",
+      "text": "Sure thing! I’d be happy to help. Could you let me know a bit more about what you need?\n\n- **Programming language(s)** you’d like to use (e.g., Python, JavaScript, Java, C++, etc.)  \n- **What the code should do** (a specific algorithm, a small utility, a web page, data‑processing script, etc.)  \n- Any **input/output requirements** or constraints (file formats, command‑line arguments, UI elements, performance considerations, etc.)  \n- Whether you need a **complete program**, just a **function/module**, or a **code snippet** to integrate into existing code.\n\nThe more details you provide, the better I can tailor the solution to your needs. Looking forward to hearing from you!",
+      "created_at": "2026-08-26T10:37:18.734Z"
     }
   ]
 }
