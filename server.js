@@ -67,6 +67,9 @@ const db = new LowSync(
 app.use(cors());
 app.use(express.json());
 
+const frontendPath = path.join(__dirname, 'dist');
+app.use(express.static(frontendPath));
+
 /* =========================
    DATABASE
 ========================= */
@@ -494,6 +497,11 @@ app.delete(
     });
   }
 );
+
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api/')) return next();
+  return res.sendFile(path.join(frontendPath, 'index.html'));
+});
 
 /* =========================
    RESPONSE PARSER
