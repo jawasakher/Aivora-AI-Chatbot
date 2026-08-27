@@ -14,7 +14,42 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const DEFAULT_PORT = Number(process.env.PORT) || 5001;
+
+const startServer = (port) => {
+  const server = app.listen(port, () => {
+    console.log(`Backend running on http://localhost:${port}`);
+
+    console.log(
+      'Configured AI providers:',
+      Object.entries(
+        providerKeys
+      )
+        .filter(
+          ([, key]) => key
+        )
+        .map(
+          ([name]) => name
+        )
+        .join(', ') ||
+        'none'
+    );
+  });
+
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      const fallbackPort = port + 1;
+      console.warn(
+        `Port ${port} is already in use. Retrying on ${fallbackPort}...`
+      );
+      process.env.PORT = String(fallbackPort);
+      startServer(fallbackPort);
+      return;
+    }
+
+    throw error;
+  });
+};
 
 /* =========================
    CONFIGURATION
@@ -1057,26 +1092,4 @@ app.post(
    START SERVER
 ========================= */
 
-app.listen(
-  PORT,
-  () => {
-    console.log(
-      `Backend running on http://localhost:${PORT}`
-    );
-
-    console.log(
-      'Configured AI providers:',
-      Object.entries(
-        providerKeys
-      )
-        .filter(
-          ([, key]) => key
-        )
-        .map(
-          ([name]) => name
-        )
-        .join(', ') ||
-        'none'
-    );
-  }
-);// Aivora server update
+startServer(DEFAULT_PORT);
