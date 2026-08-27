@@ -377,59 +377,41 @@ function App() {
   if (!auth) {
     return (
       <div className="auth-shell">
-        <div className="auth-card">
-          <div className="auth-badge"><span>✦</span> Aivora AI</div>
-          <h1>{authMode === 'login' ? 'Welcome back' : 'Create account'}</h1>
-          <p>
-            {authMode === 'login'
-              ? 'Sign in to continue to your chatbot dashboard.'
-              : 'Create a new account to start chatting.'}
-          </p>
+        <div className="auth-layout">
+          <section className="auth-showcase">
+            <div className="showcase-topline"><span className="brand-spark">✦</span> AIVORA / INTELLIGENCE STUDIO</div>
+            <div className="showcase-copy">
+              <p className="eyebrow">A clearer way to think</p>
+              <h1>Turn every idea into <em>forward motion.</em></h1>
+              <p className="showcase-description">Aivora brings conversation, creation, and context into one focused workspace built for your next great move.</p>
+            </div>
+            <div className="showcase-orbit" aria-hidden="true"><span>✦</span><b>A</b></div>
+            <div className="showcase-features">
+              <div><span>01</span><strong>Think together</strong><small>Answers that keep your context in view.</small></div>
+              <div><span>02</span><strong>Make it real</strong><small>From rough prompts to polished code and copy.</small></div>
+              <div><span>03</span><strong>Keep your flow</strong><small>Every conversation organized and ready to resume.</small></div>
+            </div>
+            <div className="showcase-footer"><span>POWERED BY</span><strong>Gemini&nbsp;&nbsp;·&nbsp;&nbsp;Groq&nbsp;&nbsp;·&nbsp;&nbsp;Cerebras</strong></div>
+          </section>
 
-          <div className="auth-toggle">
-            <button
-              type="button"
-              className={authMode === 'login' ? 'toggle-btn active' : 'toggle-btn'}
-              onClick={() => setAuthMode('login')}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              className={authMode === 'register' ? 'toggle-btn active' : 'toggle-btn'}
-              onClick={() => setAuthMode('register')}
-            >
-              Register
-            </button>
-          </div>
+          <section className="auth-card">
+            <div className="auth-badge"><span>✦</span> Aivora AI</div>
+            <h2>{authMode === 'login' ? 'Welcome back' : 'Start creating'}</h2>
+            <p>{authMode === 'login' ? 'Your intelligent workspace is ready.' : 'Your next idea starts with a conversation.'}</p>
 
-          <form className="auth-form" onSubmit={handleAuthSubmit}>
-            <label>
-              Username
-              <input
-                type="text"
-                value={authForm.username}
-                onChange={(e) => setAuthForm((prev) => ({ ...prev, username: e.target.value }))}
-                placeholder="Enter username"
-              />
-            </label>
+            <div className="auth-toggle">
+              <button type="button" className={authMode === 'login' ? 'toggle-btn active' : 'toggle-btn'} onClick={() => setAuthMode('login')}>Login</button>
+              <button type="button" className={authMode === 'register' ? 'toggle-btn active' : 'toggle-btn'} onClick={() => setAuthMode('register')}>Register</button>
+            </div>
 
-            <label>
-              Password
-              <input
-                type="password"
-                value={authForm.password}
-                onChange={(e) => setAuthForm((prev) => ({ ...prev, password: e.target.value }))}
-                placeholder={authMode === 'login' ? 'Enter password' : 'At least 6 characters'}
-              />
-            </label>
-
-            {authError && <div className="auth-error">{authError}</div>}
-
-            <button type="submit" className="auth-button">
-              {authMode === 'login' ? 'Login' : 'Create account'}
-            </button>
-          </form>
+            <form className="auth-form" onSubmit={handleAuthSubmit}>
+              <label>Username<input type="text" value={authForm.username} onChange={(e) => setAuthForm((prev) => ({ ...prev, username: e.target.value }))} placeholder="Enter username" /></label>
+              <label>Password<input type="password" value={authForm.password} onChange={(e) => setAuthForm((prev) => ({ ...prev, password: e.target.value }))} placeholder={authMode === 'login' ? 'Enter password' : 'At least 6 characters'} /></label>
+              {authError && <div className="auth-error">{authError}</div>}
+              <button type="submit" className="auth-button">{authMode === 'login' ? 'Enter Aivora' : 'Create my workspace'} <span>→</span></button>
+            </form>
+            <small className="auth-note">Private by design · Your conversations stay yours</small>
+          </section>
         </div>
       </div>
     );

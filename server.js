@@ -40,6 +40,7 @@ const configuredKey = (value) => {
 };
 
 const providerKeys = {
+  mistral: configuredKey(process.env.MISTRAL_API_KEY),
   openrouter: configuredKey(process.env.OPENROUTER_API_KEY),
   groq: configuredKey(process.env.GROQ_API_KEY),
   cerebras: configuredKey(process.env.CEREBRAS_API_KEY),
@@ -546,6 +547,19 @@ const callCompatibleProvider =
       },
 
       /* =====================
+         MISTRAL
+      ===================== */
+
+      mistral: {
+        url:
+          'https://api.mistral.ai/v1/chat/completions',
+
+        model:
+          process.env.MISTRAL_MODEL ||
+          'mistral-small-latest',
+      },
+
+      /* =====================
          GROQ
       ===================== */
 
@@ -827,13 +841,19 @@ app.post(
     /* =====================
        PROVIDER PRIORITY
        
-       1. OpenRouter
-       2. Groq
-       3. Cerebras
-       4. Gemini
+       1. Mistral
+       2. OpenRouter
+       3. Groq
+       4. Cerebras
+       5. Gemini
     ===================== */
 
     const providers = [
+      [
+        'mistral',
+        providerKeys.mistral,
+      ],
+
       [
         'openrouter',
         providerKeys.openrouter,
